@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,10 +10,10 @@ import {
   Legend,
   ChartOptions,
   TooltipItem,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import { format, parseISO } from 'date-fns';
-import { DailySnapshot, DivisionName, TeamStanding } from './types';
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+import { format, parseISO } from "date-fns";
+import { DailySnapshot, DivisionName, TeamStanding } from "./types";
 
 // Register Chart.js components
 ChartJS.register(
@@ -33,16 +33,16 @@ interface StandingsChartProps {
 
 // Distinctive team colors - each team gets a unique color
 const TEAM_COLORS = [
-  '#00D4FF', // Cyan
-  '#FF6B6B', // Coral Red
-  '#4ADE80', // Emerald
-  '#FBBF24', // Amber
-  '#A78BFA', // Violet
-  '#F472B6', // Pink
-  '#60A5FA', // Sky Blue
-  '#FB923C', // Orange
-  '#2DD4BF', // Teal
-  '#E879F9', // Fuchsia
+  "#00D4FF", // Cyan
+  "#FF6B6B", // Coral Red
+  "#4ADE80", // Emerald
+  "#FBBF24", // Amber
+  "#A78BFA", // Violet
+  "#F472B6", // Pink
+  "#60A5FA", // Sky Blue
+  "#FB923C", // Orange
+  "#2DD4BF", // Teal
+  "#E879F9", // Fuchsia
 ];
 
 function StandingsChart({ snapshots, division }: StandingsChartProps) {
@@ -63,7 +63,7 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
     const teamList = Array.from(teams).sort();
 
     // Create labels (dates)
-    const labels = snapshots.map((s) => format(parseISO(s.date), 'MMM d'));
+    const labels = snapshots.map((s) => format(parseISO(s.date), "MMM d"));
 
     // Create datasets (one per team)
     const datasets = teamList.map((teamName, index) => {
@@ -79,12 +79,12 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
         label: teamName,
         data,
         borderColor: TEAM_COLORS[index % TEAM_COLORS.length],
-        backgroundColor: TEAM_COLORS[index % TEAM_COLORS.length] + '20',
+        backgroundColor: TEAM_COLORS[index % TEAM_COLORS.length] + "20",
         borderWidth: 2.5,
         pointRadius: 4,
         pointHoverRadius: 7,
         pointBackgroundColor: TEAM_COLORS[index % TEAM_COLORS.length],
-        pointBorderColor: '#1a1a2e',
+        pointBorderColor: "#1a1a2e",
         pointBorderWidth: 2,
         tension: 0.3,
         fill: false,
@@ -109,66 +109,74 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
     return data;
   }, [snapshots, division]);
 
-  const options: ChartOptions<'line'> = useMemo(
+  const options: ChartOptions<"line"> = useMemo(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
       interaction: {
-        mode: 'index',
+        mode: "index",
         intersect: false,
       },
       plugins: {
         legend: {
-          position: 'top',
+          position: "top",
           labels: {
-            color: '#e5e5e5',
+            color: "#e5e5e5",
             font: {
-              family: 'JetBrains Mono, monospace',
+              family: "JetBrains Mono, monospace",
               size: 12,
             },
             padding: 20,
             usePointStyle: true,
-            pointStyle: 'circle',
+            pointStyle: "circle",
           },
         },
         title: {
           display: true,
           text: `${division} - Standings Position Over Time`,
-          color: '#ffffff',
+          color: "#ffffff",
           font: {
-            family: 'Outfit, sans-serif',
+            family: "Outfit, sans-serif",
             size: 18,
-            weight: '600',
+            weight: "600",
           },
           padding: {
             bottom: 20,
           },
         },
         tooltip: {
-          backgroundColor: 'rgba(26, 26, 46, 0.95)',
-          titleColor: '#ffffff',
-          bodyColor: '#e5e5e5',
-          borderColor: '#00D4FF',
+          backgroundColor: "rgba(26, 26, 46, 0.95)",
+          titleColor: "#ffffff",
+          bodyColor: "#e5e5e5",
+          borderColor: "#00D4FF",
           borderWidth: 1,
           padding: 12,
           titleFont: {
-            family: 'Outfit, sans-serif',
+            family: "Outfit, sans-serif",
             size: 14,
-            weight: '600',
+            weight: "600",
           },
           bodyFont: {
-            family: 'JetBrains Mono, monospace',
+            family: "JetBrains Mono, monospace",
             size: 12,
           },
+          itemSort: (a: TooltipItem<"line">, b: TooltipItem<"line">) => {
+            // Sort tooltip items by position (ascending)
+            const posA = a.raw as number;
+            const posB = b.raw as number;
+            return posA - posB;
+          },
           callbacks: {
-            title: (items: TooltipItem<'line'>[]) => {
-              if (items.length === 0) return '';
+            title: (items: TooltipItem<"line">[]) => {
+              if (items.length === 0) return "";
               const index = items[0].dataIndex;
               const snapshot = snapshots[index];
-              return snapshot ? format(parseISO(snapshot.date), 'EEEE, MMMM d, yyyy') : '';
+              return snapshot
+                ? format(parseISO(snapshot.date), "EEEE, MMMM d, yyyy")
+                : "";
             },
-            label: (item: TooltipItem<'line'>) => {
-              const teamName = item.dataset.label || '';
+            label: (item: TooltipItem<"line">) => {
+              const teamName = item.dataset.label || "";
               const position = item.raw as number;
               const snapshot = snapshots[item.dataIndex];
 
@@ -189,37 +197,41 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
       scales: {
         x: {
           grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
+            color: "rgba(255, 255, 255, 0.05)",
           },
           ticks: {
-            color: '#a3a3a3',
+            color: "#a3a3a3",
             font: {
-              family: 'JetBrains Mono, monospace',
+              family: "JetBrains Mono, monospace",
               size: 11,
             },
           },
         },
         y: {
           reverse: true, // Position 1 at top
-          min: 1,
+          min: 0, // Add padding above position 1
           grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
+            color: "rgba(255, 255, 255, 0.05)",
           },
           ticks: {
-            color: '#a3a3a3',
+            color: "#a3a3a3",
             font: {
-              family: 'JetBrains Mono, monospace',
+              family: "JetBrains Mono, monospace",
               size: 11,
             },
             stepSize: 1,
-            callback: (value) => `#${value}`,
+            callback: (value) => {
+              // Hide the 0 label, only show integer positions
+              if (value < 1) return "";
+              return `#${value}`;
+            },
           },
           title: {
             display: true,
-            text: 'Position',
-            color: '#a3a3a3',
+            text: "Position",
+            color: "#a3a3a3",
             font: {
-              family: 'Outfit, sans-serif',
+              family: "Outfit, sans-serif",
               size: 13,
             },
           },
@@ -245,4 +257,3 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
 }
 
 export default StandingsChart;
-

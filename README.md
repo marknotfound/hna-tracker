@@ -1,6 +1,8 @@
 # HNA Standings Tracker
 
-A daily standings tracker for Hockey North America (HNA) New Jersey leagues, featuring automated data collection and a beautiful visualization dashboard.
+This project is 100% vibecoded, please don't judge me on code quality if you're a potential employer ;) Go Ice Pack.
+
+A daily standings tracker for HNA New Jersey ice hockey leagues.
 
 ## Features
 
