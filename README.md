@@ -50,7 +50,7 @@ Each daily snapshot contains:
 
 ```typescript
 interface DailySnapshot {
-  date: string;  // "2024-12-15"
+  date: string; // "2024-12-15"
   divisions: {
     "1-BRODEUR": TeamStanding[];
     "2-MANNO": TeamStanding[];
@@ -60,15 +60,15 @@ interface DailySnapshot {
 }
 
 interface TeamStanding {
-  team: string;      // "Stealth"
-  gp: number;        // Games Played
-  w: number;         // Wins
-  l: number;         // Losses
-  t: number;         // Ties
-  otl: number;       // Overtime Losses
-  pts: number;       // Points
-  wpct: number;      // Win Percentage (0.000-1.000)
-  position: number;  // 1-indexed standings position
+  team: string; // "Stealth"
+  gp: number; // Games Played
+  w: number; // Wins
+  l: number; // Losses
+  t: number; // Ties
+  otl: number; // Overtime Losses
+  pts: number; // Points
+  wpct: number; // Win Percentage (0.000-1.000)
+  position: number; // 1-indexed standings position
 }
 ```
 
@@ -96,13 +96,13 @@ The frontend will be available at http://localhost:3000
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `yarn scrape` | Fetch current standings and save snapshot |
+| Command             | Description                                     |
+| ------------------- | ----------------------------------------------- |
+| `yarn scrape`       | Fetch current standings and save snapshot       |
 | `yarn scrape:force` | Force re-scrape even if today's snapshot exists |
-| `yarn dev` | Start Vite development server |
-| `yarn build` | Build for production |
-| `yarn preview` | Preview production build locally |
+| `yarn dev`          | Start Vite development server                   |
+| `yarn build`        | Build for production                            |
+| `yarn preview`      | Preview production build locally                |
 
 ## Deployment
 

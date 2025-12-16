@@ -23,7 +23,7 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 interface StandingsChartProps {
@@ -133,7 +133,7 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
         },
         title: {
           display: true,
-          text: `${division} - Standings Position Over Time`,
+          text: `Standings Over Time`,
           color: "#ffffff",
           font: {
             family: "Outfit, sans-serif",
@@ -238,7 +238,7 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
         },
       },
     }),
-    [division, snapshots, tooltipData]
+    [division, snapshots, tooltipData],
   );
 
   if (!chartData || chartData.datasets.length === 0) {

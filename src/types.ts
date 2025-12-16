@@ -27,11 +27,10 @@ export interface SnapshotIndex {
 
 // Division names as they appear on the HNA website
 export const DIVISION_NAMES = [
-  '1-BRODEUR',
-  '2-MANNO',
-  '3-STEVENS NORTH',
-  '3-STEVENS SOUTH',
+  "1-BRODEUR",
+  "2-MANNO",
+  "3-STEVENS NORTH",
+  "3-STEVENS SOUTH",
 ] as const;
 
 export type DivisionName = (typeof DIVISION_NAMES)[number];
-

@@ -1,12 +1,5 @@
 {
-  "divisions": [
-    "1-BRODEUR",
-    "2-MANNO",
-    "3-STEVENS NORTH",
-    "3-STEVENS SOUTH"
-  ],
-  "dates": [
-    "2025-12-15"
-  ],
+  "divisions": ["1-BRODEUR", "2-MANNO", "3-STEVENS NORTH", "3-STEVENS SOUTH"],
+  "dates": ["2025-12-15"],
   "lastUpdated": "2025-12-15T23:44:08.949Z"
 }

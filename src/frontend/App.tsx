@@ -1,14 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { DivisionName, DIVISION_NAMES, DailySnapshot, SnapshotIndex } from './types';
-import StandingsChart from './StandingsChart';
-import DivisionToggle from './DivisionToggle';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  DivisionName,
+  DIVISION_NAMES,
+  DailySnapshot,
+  SnapshotIndex,
+} from "./types";
+import StandingsChart from "./StandingsChart";
+import DivisionToggle from "./DivisionToggle";
 
 // Data base URL - use relative path that works in both dev and production
-const DATA_BASE_URL = './data';
+const DATA_BASE_URL = "./data";
 
 function App() {
   const [snapshots, setSnapshots] = useState<DailySnapshot[]>([]);
-  const [selectedDivision, setSelectedDivision] = useState<DivisionName>('1-BRODEUR');
+  const [selectedDivision, setSelectedDivision] =
+    useState<DivisionName>("1-BRODEUR");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,8 +31,8 @@ function App() {
     };
 
     handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   const loadData = async () => {
@@ -38,13 +44,15 @@ function App() {
       const indexResponse = await fetch(`${DATA_BASE_URL}/index.json`);
 
       if (!indexResponse.ok) {
-        throw new Error('No data available yet. Run the scraper first: yarn scrape');
+        throw new Error(
+          "No data available yet. Run the scraper first: yarn scrape",
+        );
       }
 
       const index: SnapshotIndex = await indexResponse.json();
 
       if (index.dates.length === 0) {
-        throw new Error('No snapshots available yet. Run: yarn scrape');
+        throw new Error("No snapshots available yet. Run: yarn scrape");
       }
 
       // Load all snapshots in parallel
@@ -59,7 +67,7 @@ function App() {
 
       const loadedSnapshots = await Promise.all(snapshotPromises);
       const validSnapshots = loadedSnapshots.filter(
-        (s): s is DailySnapshot => s !== null
+        (s): s is DailySnapshot => s !== null,
       );
 
       // Sort by date ascending for chart display
@@ -67,7 +75,7 @@ function App() {
 
       setSnapshots(validSnapshots);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -130,24 +138,21 @@ function App() {
         />
 
         <div className="chart-container">
-          <StandingsChart
-            snapshots={snapshots}
-            division={selectedDivision}
-          />
+          <StandingsChart snapshots={snapshots} division={selectedDivision} />
         </div>
 
         <div className="stats-summary">
           <p>
-            <strong>{snapshots.length}</strong> snapshots from{' '}
-            <strong>{snapshots[0]?.date || 'N/A'}</strong> to{' '}
-            <strong>{snapshots[snapshots.length - 1]?.date || 'N/A'}</strong>
+            <strong>{snapshots.length}</strong> snapshots from{" "}
+            <strong>{snapshots[0]?.date || "N/A"}</strong> to{" "}
+            <strong>{snapshots[snapshots.length - 1]?.date || "N/A"}</strong>
           </p>
         </div>
       </main>
 
       <footer className="footer">
         <p>
-          Data sourced from{' '}
+          Data sourced from{" "}
           <a
             href="https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296"
             target="_blank"

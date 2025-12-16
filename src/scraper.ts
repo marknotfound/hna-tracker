@@ -1,25 +1,27 @@
-import * as cheerio from 'cheerio';
-import { DailySnapshot, TeamStanding, DIVISION_NAMES } from './types';
+import * as cheerio from "cheerio";
+import { DailySnapshot, TeamStanding, DIVISION_NAMES } from "./types";
 
 const HNA_STANDINGS_URL =
-  'https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296';
+  "https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296";
 
 /**
  * Fetch and parse HNA standings using Cheerio
  */
 export async function scrapeStandings(): Promise<DailySnapshot> {
-  console.log('Fetching HNA standings page...');
+  console.log("Fetching HNA standings page...");
 
   const response = await fetch(HNA_STANDINGS_URL);
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch standings: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch standings: ${response.status} ${response.statusText}`,
+    );
   }
 
   const html = await response.text();
   const $ = cheerio.load(html);
 
-  console.log('Parsing standings data...');
+  console.log("Parsing standings data...");
 
   const divisions: Record<string, TeamStanding[]> = {};
 
@@ -27,14 +29,14 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
   // Find all tables with standings data (tables with 8+ columns of team data)
   const standingsTables: ReturnType<typeof $>[] = [];
 
-  $('table').each(function() {
-    const tbody = $(this).find('tbody');
-    const rows = tbody.find('tr');
+  $("table").each(function () {
+    const tbody = $(this).find("tbody");
+    const rows = tbody.find("tr");
 
     // Check if this looks like a standings table (has rows with 8 cells)
     let hasStandingsData = false;
-    rows.each(function() {
-      const cells = $(this).find('td');
+    rows.each(function () {
+      const cells = $(this).find("td");
       if (cells.length >= 8) {
         hasStandingsData = true;
         return false; // break
@@ -54,21 +56,21 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
 
     if (index < standingsTables.length) {
       const table = standingsTables[index];
-      const rows = table.find('tbody tr');
+      const rows = table.find("tbody tr");
 
-      rows.each(function() {
-        const cells = $(this).find('td');
+      rows.each(function () {
+        const cells = $(this).find("td");
 
         if (cells.length >= 8) {
           // Get team name from the link inside the first cell
           // Structure: <a><span class="d-sm-inline">Full Name</span><span class="d-sm-none">ABBR</span></a>
           const teamCell = cells.eq(0);
-          const teamLink = teamCell.find('a');
-          let teamName = '';
+          const teamLink = teamCell.find("a");
+          let teamName = "";
 
           if (teamLink.length > 0) {
             // Try to get the full name from the d-sm-inline span
-            const fullNameSpan = teamLink.find('span.d-sm-inline');
+            const fullNameSpan = teamLink.find("span.d-sm-inline");
             if (fullNameSpan.length > 0) {
               teamName = fullNameSpan.text().trim();
             } else {
@@ -81,7 +83,7 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
           }
 
           // Skip if it looks like a header
-          if (!teamName || teamName.toLowerCase() === 'team') {
+          if (!teamName || teamName.toLowerCase() === "team") {
             return;
           }
 
@@ -117,7 +119,7 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
  */
 function getTodayISO(): string {
   const now = new Date();
-  return now.toISOString().split('T')[0];
+  return now.toISOString().split("T")[0];
 }
 
 export { getTodayISO };

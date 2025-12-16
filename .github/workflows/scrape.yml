@@ -3,7 +3,7 @@ name: Daily Standings Scrape
 on:
   # Run daily at 6:00 AM UTC (after most games finish)
   schedule:
-    - cron: '0 6 * * *'
+    - cron: "0 6 * * *"
 
   # Allow manual trigger for testing
   workflow_dispatch:
@@ -25,8 +25,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'yarn'
+          node-version: "22"
+          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -51,4 +51,3 @@ jobs:
           git add data/
           git commit -m "📊 Update standings snapshot for $(date +%Y-%m-%d)"
           git push
-

@@ -88,7 +88,7 @@ async function main(): Promise<void> {
   // Check if we already have today's snapshot
   if (!forceRun && snapshotExists(today)) {
     console.log(
-      `Snapshot for ${today} already exists. Use --force to overwrite.`
+      `Snapshot for ${today} already exists. Use --force to overwrite.`,
     );
     return;
   }
@@ -101,7 +101,7 @@ async function main(): Promise<void> {
     // Validate that we got data
     const totalTeams = Object.values(snapshot.divisions).reduce(
       (sum, teams) => sum + teams.length,
-      0
+      0,
     );
 
     if (totalTeams === 0) {
@@ -112,7 +112,7 @@ async function main(): Promise<void> {
     console.log(
       `\nFound ${totalTeams} teams across ${
         Object.keys(snapshot.divisions).length
-      } divisions:`
+      } divisions:`,
     );
     for (const [division, teams] of Object.entries(snapshot.divisions)) {
       console.log(`  - ${division}: ${teams.length} teams`);
