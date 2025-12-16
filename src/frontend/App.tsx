@@ -4,15 +4,22 @@ import {
   DIVISION_NAMES,
   DailySnapshot,
   SnapshotIndex,
+  PlayerStatsSnapshot,
+  PlayerStatsIndex,
 } from "./types";
 import StandingsChart from "./StandingsChart";
+import PlayerStatsChart from "./PlayerStatsChart";
 import DivisionToggle from "./DivisionToggle";
 
 // Data base URL - use relative path that works in both dev and production
 const DATA_BASE_URL = "./data";
+const PLAYER_STATS_BASE_URL = "./data/player-stats";
 
 function App() {
   const [snapshots, setSnapshots] = useState<DailySnapshot[]>([]);
+  const [playerStatsSnapshots, setPlayerStatsSnapshots] = useState<
+    PlayerStatsSnapshot[]
+  >([]);
   const [selectedDivision, setSelectedDivision] =
     useState<DivisionName>("1-BRODEUR");
   const [loading, setLoading] = useState(true);
@@ -40,7 +47,7 @@ function App() {
       setLoading(true);
       setError(null);
 
-      // First, try to load the index
+      // First, try to load the standings index
       const indexResponse = await fetch(`${DATA_BASE_URL}/index.json`);
 
       if (!indexResponse.ok) {
@@ -55,7 +62,7 @@ function App() {
         throw new Error("No snapshots available yet. Run: yarn scrape");
       }
 
-      // Load all snapshots in parallel
+      // Load all standings snapshots in parallel
       const snapshotPromises = index.dates.map(async (date) => {
         const response = await fetch(`${DATA_BASE_URL}/snapshots/${date}.json`);
         if (!response.ok) {
@@ -74,6 +81,47 @@ function App() {
       validSnapshots.sort((a, b) => a.date.localeCompare(b.date));
 
       setSnapshots(validSnapshots);
+
+      // Try to load player stats (may not exist yet)
+      try {
+        const playerStatsIndexResponse = await fetch(
+          `${PLAYER_STATS_BASE_URL}/index.json`,
+        );
+
+        if (playerStatsIndexResponse.ok) {
+          const playerStatsIndex: PlayerStatsIndex =
+            await playerStatsIndexResponse.json();
+
+          if (playerStatsIndex.dates.length > 0) {
+            // Load all player stats snapshots in parallel
+            const playerStatsPromises = playerStatsIndex.dates.map(
+              async (date) => {
+                const response = await fetch(
+                  `${PLAYER_STATS_BASE_URL}/snapshots/${date}.json`,
+                );
+                if (!response.ok) {
+                  console.warn(`Failed to load player stats for ${date}`);
+                  return null;
+                }
+                return response.json() as Promise<PlayerStatsSnapshot>;
+              },
+            );
+
+            const loadedPlayerStats = await Promise.all(playerStatsPromises);
+            const validPlayerStats = loadedPlayerStats.filter(
+              (s): s is PlayerStatsSnapshot => s !== null,
+            );
+
+            // Sort by date ascending for chart display
+            validPlayerStats.sort((a, b) => a.date.localeCompare(b.date));
+
+            setPlayerStatsSnapshots(validPlayerStats);
+          }
+        }
+      } catch (playerStatsErr) {
+        // Player stats not available yet, that's okay
+        console.warn("Player stats not available yet:", playerStatsErr);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
@@ -141,11 +189,51 @@ function App() {
           <StandingsChart snapshots={snapshots} division={selectedDivision} />
         </div>
 
+        {playerStatsSnapshots.length > 0 && (
+          <>
+            <h2 className="section-title">Player Statistics</h2>
+
+            <div className="chart-container">
+              <PlayerStatsChart
+                snapshots={playerStatsSnapshots}
+                division={selectedDivision}
+                statType="goals"
+                topN={10}
+              />
+            </div>
+
+            <div className="chart-container">
+              <PlayerStatsChart
+                snapshots={playerStatsSnapshots}
+                division={selectedDivision}
+                statType="assists"
+                topN={10}
+              />
+            </div>
+
+            <div className="chart-container">
+              <PlayerStatsChart
+                snapshots={playerStatsSnapshots}
+                division={selectedDivision}
+                statType="points"
+                topN={10}
+              />
+            </div>
+          </>
+        )}
+
         <div className="stats-summary">
           <p>
-            <strong>{snapshots.length}</strong> snapshots from{" "}
+            <strong>{snapshots.length}</strong> standings snapshots from{" "}
             <strong>{snapshots[0]?.date || "N/A"}</strong> to{" "}
             <strong>{snapshots[snapshots.length - 1]?.date || "N/A"}</strong>
+            {playerStatsSnapshots.length > 0 && (
+              <>
+                {" "}
+                | <strong>{playerStatsSnapshots.length}</strong> player stats
+                snapshots
+              </>
+            )}
           </p>
         </div>
       </main>

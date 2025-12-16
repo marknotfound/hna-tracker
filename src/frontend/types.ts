@@ -46,3 +46,39 @@ export interface TeamChartData {
   data: ChartDataPoint[];
   color: string;
 }
+
+// Player statistics interface
+export interface PlayerStats {
+  rank: number;
+  name: string;
+  jerseyNumber: string;
+  position: string;
+  team: string;
+  gp: number;
+  goals: number;
+  assists: number;
+  points: number;
+  pointsPerGame: number;
+  ppg: number;
+  ppa: number;
+  shg: number;
+  sha: number;
+  gwg: number;
+  pim: number;
+}
+
+export interface PlayerStatsSnapshot {
+  date: string;
+  divisions: {
+    [divisionName: string]: PlayerStats[];
+  };
+}
+
+export interface PlayerStatsIndex {
+  divisions: string[];
+  dates: string[];
+  lastUpdated: string;
+}
+
+// Player stats chart types
+export type PlayerStatType = "goals" | "assists" | "points";
