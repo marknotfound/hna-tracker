@@ -1,6 +1,11 @@
 name: Deploy to GitHub Pages
 
 on:
+  # Trigger on push to main
+  push:
+    branches:
+      - main
+
   # Trigger when scrape workflow completes
   workflow_run:
     workflows: ["Daily Standings Scrape"]
@@ -25,8 +30,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Only run if manually triggered or if the scrape workflow succeeded
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Only run if: push to main, manually triggered, or scrape workflow succeeded
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout repository
