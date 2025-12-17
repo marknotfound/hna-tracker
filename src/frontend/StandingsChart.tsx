@@ -114,8 +114,8 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: {
-        mode: "index",
-        intersect: false,
+        mode: "nearest",
+        intersect: true,
       },
       plugins: {
         legend: {
