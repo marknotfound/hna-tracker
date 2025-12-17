@@ -59,6 +59,16 @@ const PLAYER_COLORS = [
   "#34D399", // Emerald-400
 ];
 
+// Generate a consistent color index from a name (hash-based)
+function getColorIndex(name: string, colorCount: number): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash) % colorCount;
+}
+
 const STAT_LABELS: Record<PlayerStatType, string> = {
   goals: "Goal Leaders",
   assists: "Assist Leaders",
@@ -149,7 +159,7 @@ function PlayerStatsChart({
     );
 
     // Create datasets (one per player)
-    const datasets = playerList.map((playerName, index) => {
+    const datasets = playerList.map((playerName) => {
       const data = rankedSnapshots.map((snapshot) => {
         const playerData = snapshot.players.find((p) => p.name === playerName);
         // Only show if player is in top N for this snapshot
@@ -159,15 +169,17 @@ function PlayerStatsChart({
         return null;
       });
 
+      // Use hash-based color so player color stays consistent regardless of position
+      const colorIndex = getColorIndex(playerName, PLAYER_COLORS.length);
       return {
         label: playerName,
         data,
-        borderColor: PLAYER_COLORS[index % PLAYER_COLORS.length],
-        backgroundColor: PLAYER_COLORS[index % PLAYER_COLORS.length] + "20",
+        borderColor: PLAYER_COLORS[colorIndex],
+        backgroundColor: PLAYER_COLORS[colorIndex] + "20",
         borderWidth: 2.5,
         pointRadius: 4,
         pointHoverRadius: 7,
-        pointBackgroundColor: PLAYER_COLORS[index % PLAYER_COLORS.length],
+        pointBackgroundColor: PLAYER_COLORS[colorIndex],
         pointBorderColor: "#1a1a2e",
         pointBorderWidth: 2,
         tension: 0.3,
