@@ -45,6 +45,16 @@ const TEAM_COLORS = [
   "#E879F9", // Fuchsia
 ];
 
+// Generate a consistent color index from a name (hash-based)
+function getColorIndex(name: string, colorCount: number): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash) % colorCount;
+}
+
 function StandingsChart({ snapshots, division }: StandingsChartProps) {
   const chartData = useMemo(() => {
     if (snapshots.length === 0) {
@@ -60,13 +70,20 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
       }
     });
 
-    const teamList = Array.from(teams).sort();
+    // Sort teams by their most recent standings position (for legend order)
+    const mostRecentSnapshot = snapshots[snapshots.length - 1];
+    const mostRecentDivision = mostRecentSnapshot?.divisions[division] || [];
+    const teamList = Array.from(teams).sort((a, b) => {
+      const posA = mostRecentDivision.find((t) => t.team === a)?.position ?? Infinity;
+      const posB = mostRecentDivision.find((t) => t.team === b)?.position ?? Infinity;
+      return posA - posB;
+    });
 
     // Create labels (dates)
     const labels = snapshots.map((s) => format(parseISO(s.date), "MMM d"));
 
     // Create datasets (one per team)
-    const datasets = teamList.map((teamName, index) => {
+    const datasets = teamList.map((teamName) => {
       const data = snapshots.map((snapshot) => {
         const divisionData = snapshot.divisions[division];
         if (!divisionData) return null;
@@ -75,15 +92,17 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
         return teamData ? teamData.position : null;
       });
 
+      // Use hash-based color so team color stays consistent regardless of position
+      const colorIndex = getColorIndex(teamName, TEAM_COLORS.length);
       return {
         label: teamName,
         data,
-        borderColor: TEAM_COLORS[index % TEAM_COLORS.length],
-        backgroundColor: TEAM_COLORS[index % TEAM_COLORS.length] + "20",
+        borderColor: TEAM_COLORS[colorIndex],
+        backgroundColor: TEAM_COLORS[colorIndex] + "20",
         borderWidth: 2.5,
         pointRadius: 4,
         pointHoverRadius: 7,
-        pointBackgroundColor: TEAM_COLORS[index % TEAM_COLORS.length],
+        pointBackgroundColor: TEAM_COLORS[colorIndex],
         pointBorderColor: "#1a1a2e",
         pointBorderWidth: 2,
         tension: 0.3,
@@ -114,8 +133,8 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: {
-        mode: "index",
-        intersect: false,
+        mode: "nearest",
+        intersect: true,
       },
       plugins: {
         legend: {

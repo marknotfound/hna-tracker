@@ -62,11 +62,12 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
         const cells = $(this).find("td");
 
         if (cells.length >= 8) {
-          // Get team name from the link inside the first cell
+          // Get team name and abbreviation from the link inside the first cell
           // Structure: <a><span class="d-sm-inline">Full Name</span><span class="d-sm-none">ABBR</span></a>
           const teamCell = cells.eq(0);
           const teamLink = teamCell.find("a");
           let teamName = "";
+          let teamAbbr = "";
 
           if (teamLink.length > 0) {
             // Try to get the full name from the d-sm-inline span
@@ -76,6 +77,12 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
             } else {
               // Fallback to link text
               teamName = teamLink.text().trim();
+            }
+
+            // Get abbreviation from d-sm-none span
+            const abbrSpan = teamLink.find("span.d-sm-none");
+            if (abbrSpan.length > 0) {
+              teamAbbr = abbrSpan.text().trim();
             }
           } else {
             // Fallback to cell text if no link
@@ -89,6 +96,7 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
 
           teams.push({
             team: teamName,
+            abbr: teamAbbr || undefined,
             gp: parseInt(cells.eq(1).text().trim(), 10) || 0,
             w: parseInt(cells.eq(2).text().trim(), 10) || 0,
             l: parseInt(cells.eq(3).text().trim(), 10) || 0,
