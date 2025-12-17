@@ -60,7 +60,14 @@ function StandingsChart({ snapshots, division }: StandingsChartProps) {
       }
     });
 
-    const teamList = Array.from(teams).sort();
+    // Sort teams by their most recent standings position (for legend order)
+    const mostRecentSnapshot = snapshots[snapshots.length - 1];
+    const mostRecentDivision = mostRecentSnapshot?.divisions[division] || [];
+    const teamList = Array.from(teams).sort((a, b) => {
+      const posA = mostRecentDivision.find((t) => t.team === a)?.position ?? Infinity;
+      const posB = mostRecentDivision.find((t) => t.team === b)?.position ?? Infinity;
+      return posA - posB;
+    });
 
     // Create labels (dates)
     const labels = snapshots.map((s) => format(parseISO(s.date), "MMM d"));

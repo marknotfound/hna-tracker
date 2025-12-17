@@ -135,7 +135,13 @@ function PlayerStatsChart({
       });
     });
 
-    const playerList = Array.from(topPlayers).sort();
+    // Sort players by their most recent rank (for legend order)
+    const mostRecentSnapshot = rankedSnapshots[rankedSnapshots.length - 1];
+    const playerList = Array.from(topPlayers).sort((a, b) => {
+      const rankA = mostRecentSnapshot.players.find((p) => p.name === a)?.statRank ?? Infinity;
+      const rankB = mostRecentSnapshot.players.find((p) => p.name === b)?.statRank ?? Infinity;
+      return rankA - rankB;
+    });
 
     // Create labels (dates)
     const labels = rankedSnapshots.map((s) =>
