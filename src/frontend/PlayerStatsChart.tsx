@@ -15,6 +15,7 @@ import { Line } from "react-chartjs-2";
 import { format, parseISO } from "date-fns";
 import {
   PlayerStatsSnapshot,
+  DailySnapshot,
   DivisionName,
   PlayerStats,
   PlayerStatType,
@@ -33,6 +34,7 @@ ChartJS.register(
 
 interface PlayerStatsChartProps {
   snapshots: PlayerStatsSnapshot[];
+  standingsSnapshots: DailySnapshot[]; // For team name mapping
   division: DivisionName;
   statType: PlayerStatType;
   topN?: number; // Show top N players, default 10
@@ -71,6 +73,7 @@ const STAT_KEYS: Record<PlayerStatType, keyof PlayerStats> = {
 
 function PlayerStatsChart({
   snapshots,
+  standingsSnapshots,
   division,
   statType,
   topN = 10,
@@ -79,6 +82,25 @@ function PlayerStatsChart({
   const getStatValue = (player: PlayerStats): number => {
     return player[STAT_KEYS[statType]] as number;
   };
+
+  // Build team abbreviation to full name mapping from standings data
+  const teamNameMap = useMemo(() => {
+    const mapping: Record<string, string> = {};
+    // Use the most recent standings snapshot that has abbreviations
+    for (let i = standingsSnapshots.length - 1; i >= 0; i--) {
+      const snapshot = standingsSnapshots[i];
+      Object.values(snapshot.divisions).forEach((teams) => {
+        teams.forEach((team) => {
+          if (team.abbr && !mapping[team.abbr]) {
+            mapping[team.abbr] = team.team;
+          }
+        });
+      });
+      // If we found mappings, we can stop
+      if (Object.keys(mapping).length > 0) break;
+    }
+    return mapping;
+  }, [standingsSnapshots]);
 
   // Calculate rankings based on stat type for each snapshot
   const rankedSnapshots = useMemo(() => {
@@ -242,10 +264,12 @@ function PlayerStatsChart({
               const playerData = tooltipData[snapshot.date]?.[playerName];
               if (!playerData) return `${playerName}: #${rank}`;
 
+              // Use full team name from mapping, fallback to abbreviation
+              const teamName = teamNameMap[playerData.team] || playerData.team;
               return [
                 `${playerName}: #${rank}`,
                 `  ${statType.charAt(0).toUpperCase() + statType.slice(1)}: ${playerData.statValue} | GP: ${playerData.gp}`,
-                `  Team: ${playerData.team} | G: ${playerData.goals} A: ${playerData.assists} P: ${playerData.points}`,
+                `  Team: ${teamName} | G: ${playerData.goals} A: ${playerData.assists} P: ${playerData.points}`,
               ];
             },
           },
@@ -295,7 +319,7 @@ function PlayerStatsChart({
         },
       },
     }),
-    [statType, rankedSnapshots, tooltipData, topN],
+    [statType, rankedSnapshots, tooltipData, topN, teamNameMap],
   );
 
   if (!chartData || chartData.datasets.length === 0) {

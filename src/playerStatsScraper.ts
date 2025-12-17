@@ -54,12 +54,20 @@ async function scrapeDivisionStats(
 
         // Stats tables have 16 columns: Rank, Player, #, Pos, Team, GP, G, A, PTS, P/G, PPG, PPA, SHG, SHA, GWG, PIM
         if (cells.length >= 16) {
-          // Get player name - it's in the second cell (index 1), usually in an anchor
+          // Get player name - the cell contains both abbreviated and full name
+          // HTML structure: <span class="d-sm-inline">Initial LastName\n\n\nFull Name</span><span class="d-sm-none">ABBR</span>
+          // We want just the full name (last line)
           const playerCell = cells.eq(1);
-          const playerLink = playerCell.find("a");
-          const playerName = playerLink.length > 0
-            ? playerLink.text().trim()
+          const fullNameSpan = playerCell.find("span.d-sm-inline");
+          let playerName = fullNameSpan.length > 0
+            ? fullNameSpan.text().trim()
             : playerCell.text().trim();
+
+          // Extract just the full name (after newlines)
+          const nameParts = playerName.split(/\n+/).filter(part => part.trim());
+          if (nameParts.length > 1) {
+            playerName = nameParts[nameParts.length - 1].trim();
+          }
 
           // Skip header rows or empty names
           if (
@@ -70,12 +78,20 @@ async function scrapeDivisionStats(
             return;
           }
 
+          // Get team abbreviation - extract from d-sm-none span to get the short code
+          // Full team names are available in standings data and will be mapped in the frontend
+          const teamCell = cells.eq(4);
+          const teamAbbrSpan = teamCell.find("span.d-sm-none");
+          const team = teamAbbrSpan.length > 0
+            ? teamAbbrSpan.text().trim()
+            : teamCell.text().trim();
+
           const player: PlayerStats = {
             rank: index + 1, // 1-indexed position
             name: playerName,
             jerseyNumber: cells.eq(2).text().trim(),
             position: cells.eq(3).text().trim(),
-            team: cells.eq(4).text().trim(),
+            team,
             gp: parseInt(cells.eq(5).text().trim(), 10) || 0,
             goals: parseInt(cells.eq(6).text().trim(), 10) || 0,
             assists: parseInt(cells.eq(7).text().trim(), 10) || 0,

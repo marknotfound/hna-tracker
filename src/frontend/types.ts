@@ -2,6 +2,7 @@
 
 export interface TeamStanding {
   team: string;
+  abbr?: string; // Team abbreviation (e.g., "KNKL", "RNGD")
   gp: number;
   w: number;
   l: number;

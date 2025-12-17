@@ -196,6 +196,7 @@ function App() {
             <div className="chart-container">
               <PlayerStatsChart
                 snapshots={playerStatsSnapshots}
+                standingsSnapshots={snapshots}
                 division={selectedDivision}
                 statType="goals"
                 topN={10}
@@ -205,6 +206,7 @@ function App() {
             <div className="chart-container">
               <PlayerStatsChart
                 snapshots={playerStatsSnapshots}
+                standingsSnapshots={snapshots}
                 division={selectedDivision}
                 statType="assists"
                 topN={10}
@@ -214,6 +216,7 @@ function App() {
             <div className="chart-container">
               <PlayerStatsChart
                 snapshots={playerStatsSnapshots}
+                standingsSnapshots={snapshots}
                 division={selectedDivision}
                 statType="points"
                 topN={10}
