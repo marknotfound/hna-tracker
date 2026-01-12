@@ -83,3 +83,4 @@ export interface PlayerStatsIndex {
 
 // Player stats chart types
 export type PlayerStatType = "goals" | "assists" | "points";
+

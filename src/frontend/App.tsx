@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DivisionName,
   DIVISION_NAMES,
@@ -10,6 +10,8 @@ import {
 import StandingsChart from "./StandingsChart";
 import PlayerStatsChart from "./PlayerStatsChart";
 import DivisionToggle from "./DivisionToggle";
+import { useIsMobile } from "./useIsMobile";
+import { sampleSnapshots } from "./sampleSnapshots";
 
 // Data base URL - use relative path that works in both dev and production
 const DATA_BASE_URL = "./data";
@@ -24,6 +26,17 @@ function App() {
     useState<DivisionName>("1-BRODEUR");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+
+  // Sample snapshots for chart display (28 on desktop, 14 on mobile)
+  const sampledSnapshots = useMemo(
+    () => sampleSnapshots(snapshots, isMobile),
+    [snapshots, isMobile],
+  );
+  const sampledPlayerStatsSnapshots = useMemo(
+    () => sampleSnapshots(playerStatsSnapshots, isMobile),
+    [playerStatsSnapshots, isMobile],
+  );
 
   // Load data on mount
   useEffect(() => {
@@ -174,7 +187,7 @@ function App() {
       <header className="header">
         <h1>HNA Standings Tracker</h1>
         <p className="subtitle">
-          Hockey North America - New Jersey Division Standings Over Time
+          New Jersey Standings Over Time
         </p>
       </header>
 
@@ -186,7 +199,7 @@ function App() {
         />
 
         <div className="chart-container">
-          <StandingsChart snapshots={snapshots} division={selectedDivision} />
+          <StandingsChart snapshots={sampledSnapshots} division={selectedDivision} />
         </div>
 
         {playerStatsSnapshots.length > 0 && (
@@ -195,7 +208,7 @@ function App() {
 
             <div className="chart-container">
               <PlayerStatsChart
-                snapshots={playerStatsSnapshots}
+                snapshots={sampledPlayerStatsSnapshots}
                 standingsSnapshots={snapshots}
                 division={selectedDivision}
                 statType="goals"
@@ -205,7 +218,7 @@ function App() {
 
             <div className="chart-container">
               <PlayerStatsChart
-                snapshots={playerStatsSnapshots}
+                snapshots={sampledPlayerStatsSnapshots}
                 standingsSnapshots={snapshots}
                 division={selectedDivision}
                 statType="assists"
@@ -215,7 +228,7 @@ function App() {
 
             <div className="chart-container">
               <PlayerStatsChart
-                snapshots={playerStatsSnapshots}
+                snapshots={sampledPlayerStatsSnapshots}
                 standingsSnapshots={snapshots}
                 division={selectedDivision}
                 statType="points"
@@ -227,14 +240,15 @@ function App() {
 
         <div className="stats-summary">
           <p>
-            <strong>{snapshots.length}</strong> standings snapshots from{" "}
-            <strong>{snapshots[0]?.date || "N/A"}</strong> to{" "}
-            <strong>{snapshots[snapshots.length - 1]?.date || "N/A"}</strong>
-            {playerStatsSnapshots.length > 0 && (
+            Showing <strong>{sampledSnapshots.length}</strong> of{" "}
+            <strong>{snapshots.length}</strong> snapshots from{" "}
+            <strong>{sampledSnapshots[0]?.date || "N/A"}</strong> to{" "}
+            <strong>{sampledSnapshots[sampledSnapshots.length - 1]?.date || "N/A"}</strong>
+            {sampledPlayerStatsSnapshots.length > 0 && (
               <>
                 {" "}
-                | <strong>{playerStatsSnapshots.length}</strong> player stats
-                snapshots
+                | <strong>{sampledPlayerStatsSnapshots.length}</strong> player stats
+                data points
               </>
             )}
           </p>
