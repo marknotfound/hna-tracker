@@ -51,3 +51,4 @@ jobs:
           git add data/
           git commit -m "📊 Update standings snapshot for $(date +%Y-%m-%d)"
           git push
+
