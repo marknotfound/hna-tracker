@@ -6,9 +6,13 @@ import {
   SnapshotIndex,
   PlayerStatsSnapshot,
   PlayerStatsIndex,
+  GoalieStatsSnapshot,
+  GoalieStatsIndex,
+  GOALIE_MIN_GP,
 } from "./types";
 import StandingsChart from "./StandingsChart";
 import PlayerStatsChart from "./PlayerStatsChart";
+import GoalieStatsChart from "./GoalieStatsChart";
 import DivisionToggle from "./DivisionToggle";
 import { useIsMobile } from "./useIsMobile";
 import { sampleSnapshots } from "./sampleSnapshots";
@@ -16,11 +20,18 @@ import { sampleSnapshots } from "./sampleSnapshots";
 // Data base URL - use relative path that works in both dev and production
 const DATA_BASE_URL = "./data";
 const PLAYER_STATS_BASE_URL = "./data/player-stats";
+const GOALIE_STATS_BASE_URL = "./data/goalie-stats";
+
+// Check for goalie stats feature flag in URL query string
+const urlParams = new URLSearchParams(window.location.search);
 
 function App() {
   const [snapshots, setSnapshots] = useState<DailySnapshot[]>([]);
   const [playerStatsSnapshots, setPlayerStatsSnapshots] = useState<
     PlayerStatsSnapshot[]
+  >([]);
+  const [goalieStatsSnapshots, setGoalieStatsSnapshots] = useState<
+    GoalieStatsSnapshot[]
   >([]);
   const [selectedDivision, setSelectedDivision] =
     useState<DivisionName>("1-BRODEUR");
@@ -36,6 +47,10 @@ function App() {
   const sampledPlayerStatsSnapshots = useMemo(
     () => sampleSnapshots(playerStatsSnapshots, isMobile),
     [playerStatsSnapshots, isMobile],
+  );
+  const sampledGoalieStatsSnapshots = useMemo(
+    () => sampleSnapshots(goalieStatsSnapshots, isMobile),
+    [goalieStatsSnapshots, isMobile],
   );
 
   // Load data on mount
@@ -135,6 +150,47 @@ function App() {
         // Player stats not available yet, that's okay
         console.warn("Player stats not available yet:", playerStatsErr);
       }
+
+      // Try to load goalie stats if feature flag is enabled (may not exist yet)
+      try {
+        const goalieStatsIndexResponse = await fetch(
+          `${GOALIE_STATS_BASE_URL}/index.json`,
+        );
+
+        if (goalieStatsIndexResponse.ok) {
+          const goalieStatsIndex: GoalieStatsIndex =
+            await goalieStatsIndexResponse.json();
+
+          if (goalieStatsIndex.dates.length > 0) {
+            // Load all goalie stats snapshots in parallel
+            const goalieStatsPromises = goalieStatsIndex.dates.map(
+              async (date) => {
+                const response = await fetch(
+                  `${GOALIE_STATS_BASE_URL}/snapshots/${date}.json`,
+                );
+                if (!response.ok) {
+                  console.warn(`Failed to load goalie stats for ${date}`);
+                  return null;
+                }
+                return response.json() as Promise<GoalieStatsSnapshot>;
+              },
+            );
+
+            const loadedGoalieStats = await Promise.all(goalieStatsPromises);
+            const validGoalieStats = loadedGoalieStats.filter(
+              (s): s is GoalieStatsSnapshot => s !== null,
+            );
+
+            // Sort by date ascending for chart display
+            validGoalieStats.sort((a, b) => a.date.localeCompare(b.date));
+
+            setGoalieStatsSnapshots(validGoalieStats);
+          }
+        }
+      } catch (goalieStatsErr) {
+        // Goalie stats not available yet, that's okay
+        console.warn("Goalie stats not available yet:", goalieStatsErr);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
@@ -232,6 +288,46 @@ function App() {
                 standingsSnapshots={snapshots}
                 division={selectedDivision}
                 statType="points"
+                topN={10}
+              />
+            </div>
+          </>
+        )}
+
+        {goalieStatsSnapshots.length > 0 && (
+          <>
+            <h2 className="section-title">Goalie Statistics</h2>
+            <p className="stats-note">
+              Only goalies with minimum {GOALIE_MIN_GP} games played in the selected
+              division are represented.
+            </p>
+
+            <div className="chart-container">
+              <GoalieStatsChart
+                snapshots={sampledGoalieStatsSnapshots}
+                standingsSnapshots={snapshots}
+                division={selectedDivision}
+                statType="svPct"
+                topN={10}
+              />
+            </div>
+
+            <div className="chart-container">
+              <GoalieStatsChart
+                snapshots={sampledGoalieStatsSnapshots}
+                standingsSnapshots={snapshots}
+                division={selectedDivision}
+                statType="gaa"
+                topN={10}
+              />
+            </div>
+
+            <div className="chart-container">
+              <GoalieStatsChart
+                snapshots={sampledGoalieStatsSnapshots}
+                standingsSnapshots={snapshots}
+                division={selectedDivision}
+                statType="so"
                 topN={10}
               />
             </div>

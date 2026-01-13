@@ -2,12 +2,15 @@ import * as fs from "fs";
 import * as path from "path";
 import { scrapeStandings } from "./scraper";
 import { scrapePlayerStats } from "./playerStatsScraper";
+import { scrapeGoalieStats } from "./goalieStatsScraper";
 import {
   DailySnapshot,
   SnapshotIndex,
   DIVISION_NAMES,
   PlayerStatsSnapshot,
   PlayerStatsIndex,
+  GoalieStatsSnapshot,
+  GoalieStatsIndex,
 } from "./types";
 
 const DATA_DIR = path.join(__dirname, "..", "data");
@@ -18,6 +21,11 @@ const INDEX_FILE = path.join(DATA_DIR, "index.json");
 const PLAYER_STATS_DIR = path.join(DATA_DIR, "player-stats");
 const PLAYER_STATS_SNAPSHOTS_DIR = path.join(PLAYER_STATS_DIR, "snapshots");
 const PLAYER_STATS_INDEX_FILE = path.join(PLAYER_STATS_DIR, "index.json");
+
+// Goalie stats directories
+const GOALIE_STATS_DIR = path.join(DATA_DIR, "goalie-stats");
+const GOALIE_STATS_SNAPSHOTS_DIR = path.join(GOALIE_STATS_DIR, "snapshots");
+const GOALIE_STATS_INDEX_FILE = path.join(GOALIE_STATS_DIR, "index.json");
 
 /**
  * Ensure the data directories exist
@@ -34,6 +42,12 @@ function ensureDirectories(): void {
   }
   if (!fs.existsSync(PLAYER_STATS_SNAPSHOTS_DIR)) {
     fs.mkdirSync(PLAYER_STATS_SNAPSHOTS_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(GOALIE_STATS_DIR)) {
+    fs.mkdirSync(GOALIE_STATS_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(GOALIE_STATS_SNAPSHOTS_DIR)) {
+    fs.mkdirSync(GOALIE_STATS_SNAPSHOTS_DIR, { recursive: true });
   }
 }
 
@@ -58,6 +72,21 @@ function loadIndex(): SnapshotIndex {
 function loadPlayerStatsIndex(): PlayerStatsIndex {
   if (fs.existsSync(PLAYER_STATS_INDEX_FILE)) {
     const content = fs.readFileSync(PLAYER_STATS_INDEX_FILE, "utf-8");
+    return JSON.parse(content);
+  }
+  return {
+    divisions: [...DIVISION_NAMES],
+    dates: [],
+    lastUpdated: new Date().toISOString(),
+  };
+}
+
+/**
+ * Load the goalie stats index file or create a new one
+ */
+function loadGoalieStatsIndex(): GoalieStatsIndex {
+  if (fs.existsSync(GOALIE_STATS_INDEX_FILE)) {
+    const content = fs.readFileSync(GOALIE_STATS_INDEX_FILE, "utf-8");
     return JSON.parse(content);
   }
   return {
@@ -125,6 +154,36 @@ function savePlayerStatsSnapshot(snapshot: PlayerStatsSnapshot): void {
 }
 
 /**
+ * Save goalie stats snapshot to disk and update the index
+ */
+function saveGoalieStatsSnapshot(snapshot: GoalieStatsSnapshot): void {
+  const snapshotPath = path.join(
+    GOALIE_STATS_SNAPSHOTS_DIR,
+    `${snapshot.date}.json`,
+  );
+
+  // Write the snapshot file
+  fs.writeFileSync(snapshotPath, JSON.stringify(snapshot, null, 2));
+  console.log(`Saved goalie stats snapshot to: ${snapshotPath}`);
+
+  // Update the index
+  const index = loadGoalieStatsIndex();
+
+  // Add date if not already present
+  if (!index.dates.includes(snapshot.date)) {
+    index.dates.push(snapshot.date);
+    // Sort dates in descending order (newest first)
+    index.dates.sort((a, b) => b.localeCompare(a));
+  }
+
+  index.lastUpdated = new Date().toISOString();
+
+  // Write the updated index
+  fs.writeFileSync(GOALIE_STATS_INDEX_FILE, JSON.stringify(index, null, 2));
+  console.log(`Updated goalie stats index file: ${GOALIE_STATS_INDEX_FILE}`);
+}
+
+/**
  * Check if today's snapshot already exists
  */
 function snapshotExists(date: string): boolean {
@@ -137,6 +196,14 @@ function snapshotExists(date: string): boolean {
  */
 function playerStatsSnapshotExists(date: string): boolean {
   const snapshotPath = path.join(PLAYER_STATS_SNAPSHOTS_DIR, `${date}.json`);
+  return fs.existsSync(snapshotPath);
+}
+
+/**
+ * Check if today's goalie stats snapshot already exists
+ */
+function goalieStatsSnapshotExists(date: string): boolean {
+  const snapshotPath = path.join(GOALIE_STATS_SNAPSHOTS_DIR, `${date}.json`);
   return fs.existsSync(snapshotPath);
 }
 
@@ -159,8 +226,9 @@ async function main(): Promise<void> {
   // Check if we already have today's snapshots
   const standingsExist = snapshotExists(today);
   const playerStatsExist = playerStatsSnapshotExists(today);
+  const goalieStatsExist = goalieStatsSnapshotExists(today);
 
-  if (!forceRun && standingsExist && playerStatsExist) {
+  if (!forceRun && standingsExist && playerStatsExist && goalieStatsExist) {
     console.log(
       `All snapshots for ${today} already exist. Use --force to overwrite.`,
     );
@@ -235,6 +303,41 @@ async function main(): Promise<void> {
       );
     }
 
+    // Scrape goalie stats if needed
+    if (forceRun || !goalieStatsExist) {
+      console.log("\nScraping HNA goalie stats...");
+      const goalieStatsSnapshot = await scrapeGoalieStats();
+
+      // Validate that we got data
+      const totalGoalies = Object.values(goalieStatsSnapshot.divisions).reduce(
+        (sum, goalies) => sum + goalies.length,
+        0,
+      );
+
+      if (totalGoalies === 0) {
+        console.error("Warning: No goalies found in stats data!");
+      } else {
+        console.log(
+          `\nFound ${totalGoalies} goalies across ${
+            Object.keys(goalieStatsSnapshot.divisions).length
+          } divisions:`,
+        );
+        for (const [division, goalies] of Object.entries(
+          goalieStatsSnapshot.divisions,
+        )) {
+          console.log(`  - ${division}: ${goalies.length} goalies`);
+        }
+      }
+
+      // Save the goalie stats snapshot
+      console.log("\nSaving goalie stats snapshot...");
+      saveGoalieStatsSnapshot(goalieStatsSnapshot);
+    } else {
+      console.log(
+        `Goalie stats snapshot for ${today} already exists, skipping.`,
+      );
+    }
+
     console.log("\nDone!");
   } catch (error) {
     console.error("Error scraping data:", error);
@@ -247,4 +350,5 @@ main().catch((error) => {
   console.error("Unhandled error:", error);
   process.exit(1);
 });
+
 
