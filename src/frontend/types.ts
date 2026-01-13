@@ -84,3 +84,46 @@ export interface PlayerStatsIndex {
 // Player stats chart types
 export type PlayerStatType = "goals" | "assists" | "points";
 
+// Goalie statistics interface
+export interface GoalieStats {
+  rank: number;
+  name: string;
+  team: string;
+  gp: number;
+  w: number;
+  l: number;
+  t: number;
+  otl: number;
+  so: number; // Shutouts
+  mp: number;
+  ga: number;
+  gaa: number; // Goals Against Average
+  gsaa: number;
+  sa: number;
+  sv: number;
+  svPct: number; // Save Percentage (e.g., 0.876)
+  goals: number;
+  assists: number;
+  pim: number;
+}
+
+export interface GoalieStatsSnapshot {
+  date: string;
+  divisions: {
+    [divisionName: string]: GoalieStats[];
+  };
+}
+
+export interface GoalieStatsIndex {
+  divisions: string[];
+  dates: string[];
+  lastUpdated: string;
+}
+
+// Goalie stats chart types
+export type GoalieStatType = "so" | "gaa" | "svPct";
+
+// Minimum games played to display in goalie charts
+export const GOALIE_MIN_GP = 6;
+
+

@@ -77,3 +77,43 @@ export const DIVISION_IDS: Record<DivisionName, string> = {
   "3-STEVENS SOUTH": "130945",
 };
 
+// Goalie statistics interface - all columns from the goalie stats table
+export interface GoalieStats {
+  rank: number; // Position in standings
+  name: string; // Goalie name
+  team: string; // Team abbreviation
+  gp: number; // Games Played
+  w: number; // Wins
+  l: number; // Losses
+  t: number; // Ties
+  otl: number; // Overtime Losses
+  so: number; // Shutouts
+  mp: number; // Minutes Played
+  ga: number; // Goals Against
+  gaa: number; // Goals Against Average
+  gsaa: number; // Goals Saved Above Average
+  sa: number; // Shots Against
+  sv: number; // Saves
+  svPct: number; // Save Percentage (e.g., 0.876)
+  goals: number; // Goals (scored by goalie)
+  assists: number; // Assists
+  pim: number; // Penalties in Minutes
+}
+
+export interface GoalieStatsSnapshot {
+  date: string; // ISO date: "2024-12-15"
+  divisions: {
+    [divisionName: string]: GoalieStats[];
+  };
+}
+
+export interface GoalieStatsIndex {
+  divisions: string[];
+  dates: string[];
+  lastUpdated: string;
+}
+
+// Minimum games played to display in goalie charts
+export const GOALIE_MIN_GP = 6;
+
+

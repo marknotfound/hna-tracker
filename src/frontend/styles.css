@@ -213,6 +213,14 @@ body::before {
   border-top: 1px solid var(--border-color);
 }
 
+.stats-note {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
 /* Stats Summary */
 .stats-summary {
   text-align: center;
