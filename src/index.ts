@@ -6,49 +6,74 @@ import { scrapeGoalieStats } from "./goalieStatsScraper";
 import {
   DailySnapshot,
   SnapshotIndex,
-  DIVISION_NAMES,
   PlayerStatsSnapshot,
   PlayerStatsIndex,
   GoalieStatsSnapshot,
   GoalieStatsIndex,
 } from "./types";
+import { SEASONS, SeasonConfig, getCurrentSeason } from "./seasons";
 
 const DATA_DIR = path.join(__dirname, "..", "data");
-const SNAPSHOTS_DIR = path.join(DATA_DIR, "snapshots");
-const INDEX_FILE = path.join(DATA_DIR, "index.json");
+const SEASONS_FILE = path.join(DATA_DIR, "seasons.json");
+
+// The daily scraper always tracks the current season. Previous seasons are
+// archived in their own directories and remain available to view.
+const season = getCurrentSeason();
+const SEASON_DIR = path.join(DATA_DIR, "seasons", season.id);
+
+// Standings directories
+const SNAPSHOTS_DIR = path.join(SEASON_DIR, "snapshots");
+const INDEX_FILE = path.join(SEASON_DIR, "index.json");
 
 // Player stats directories
-const PLAYER_STATS_DIR = path.join(DATA_DIR, "player-stats");
+const PLAYER_STATS_DIR = path.join(SEASON_DIR, "player-stats");
 const PLAYER_STATS_SNAPSHOTS_DIR = path.join(PLAYER_STATS_DIR, "snapshots");
 const PLAYER_STATS_INDEX_FILE = path.join(PLAYER_STATS_DIR, "index.json");
 
 // Goalie stats directories
-const GOALIE_STATS_DIR = path.join(DATA_DIR, "goalie-stats");
+const GOALIE_STATS_DIR = path.join(SEASON_DIR, "goalie-stats");
 const GOALIE_STATS_SNAPSHOTS_DIR = path.join(GOALIE_STATS_DIR, "snapshots");
 const GOALIE_STATS_INDEX_FILE = path.join(GOALIE_STATS_DIR, "index.json");
+
+const DIVISION_NAMES = season.divisions.map((d) => d.name);
 
 /**
  * Ensure the data directories exist
  */
 function ensureDirectories(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  for (const dir of [
+    DATA_DIR,
+    SEASON_DIR,
+    SNAPSHOTS_DIR,
+    PLAYER_STATS_DIR,
+    PLAYER_STATS_SNAPSHOTS_DIR,
+    GOALIE_STATS_DIR,
+    GOALIE_STATS_SNAPSHOTS_DIR,
+  ]) {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
   }
-  if (!fs.existsSync(SNAPSHOTS_DIR)) {
-    fs.mkdirSync(SNAPSHOTS_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(PLAYER_STATS_DIR)) {
-    fs.mkdirSync(PLAYER_STATS_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(PLAYER_STATS_SNAPSHOTS_DIR)) {
-    fs.mkdirSync(PLAYER_STATS_SNAPSHOTS_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(GOALIE_STATS_DIR)) {
-    fs.mkdirSync(GOALIE_STATS_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(GOALIE_STATS_SNAPSHOTS_DIR)) {
-    fs.mkdirSync(GOALIE_STATS_SNAPSHOTS_DIR, { recursive: true });
-  }
+}
+
+/**
+ * Write the seasons manifest the frontend reads to discover available seasons.
+ * Derived from the season config so it never drifts out of sync.
+ */
+function writeSeasonsManifest(): void {
+  const defaultSeason = (SEASONS.find((s) => s.current) ?? SEASONS[0]).id;
+  const manifest = {
+    defaultSeason,
+    seasons: SEASONS.map((s: SeasonConfig) => ({
+      id: s.id,
+      label: s.label,
+      leagueId: s.leagueId,
+      current: s.current,
+      divisions: s.divisions.map((d) => d.name),
+    })),
+  };
+  fs.writeFileSync(SEASONS_FILE, JSON.stringify(manifest, null, 2) + "\n");
+  console.log(`Wrote seasons manifest: ${SEASONS_FILE}`);
 }
 
 /**
@@ -108,6 +133,7 @@ function saveSnapshot(snapshot: DailySnapshot): void {
 
   // Update the index
   const index = loadIndex();
+  index.divisions = [...DIVISION_NAMES];
 
   // Add date if not already present
   if (!index.dates.includes(snapshot.date)) {
@@ -138,6 +164,7 @@ function savePlayerStatsSnapshot(snapshot: PlayerStatsSnapshot): void {
 
   // Update the index
   const index = loadPlayerStatsIndex();
+  index.divisions = [...DIVISION_NAMES];
 
   // Add date if not already present
   if (!index.dates.includes(snapshot.date)) {
@@ -168,6 +195,7 @@ function saveGoalieStatsSnapshot(snapshot: GoalieStatsSnapshot): void {
 
   // Update the index
   const index = loadGoalieStatsIndex();
+  index.divisions = [...DIVISION_NAMES];
 
   // Add date if not already present
   if (!index.dates.includes(snapshot.date)) {
@@ -212,10 +240,14 @@ function goalieStatsSnapshotExists(date: string): boolean {
  */
 async function main(): Promise<void> {
   console.log("HNA Standings Tracker - Daily Scraper");
-  console.log("=====================================\n");
+  console.log("=====================================");
+  console.log(`Tracking season: ${season.label} (${season.id})\n`);
 
   // Ensure directories exist
   ensureDirectories();
+
+  // Keep the seasons manifest in sync with the season config.
+  writeSeasonsManifest();
 
   // Check for --force flag
   const forceRun = process.argv.includes("--force");
@@ -239,7 +271,7 @@ async function main(): Promise<void> {
     // Scrape standings if needed
     if (forceRun || !standingsExist) {
       console.log("Scraping HNA standings...");
-      const snapshot = await scrapeStandings();
+      const snapshot = await scrapeStandings(season);
 
       // Validate that we got data
       const totalTeams = Object.values(snapshot.divisions).reduce(
@@ -271,7 +303,7 @@ async function main(): Promise<void> {
     // Scrape player stats if needed
     if (forceRun || !playerStatsExist) {
       console.log("\nScraping HNA player stats...");
-      const playerStatsSnapshot = await scrapePlayerStats();
+      const playerStatsSnapshot = await scrapePlayerStats(season);
 
       // Validate that we got data
       const totalPlayers = Object.values(playerStatsSnapshot.divisions).reduce(
@@ -306,7 +338,7 @@ async function main(): Promise<void> {
     // Scrape goalie stats if needed
     if (forceRun || !goalieStatsExist) {
       console.log("\nScraping HNA goalie stats...");
-      const goalieStatsSnapshot = await scrapeGoalieStats();
+      const goalieStatsSnapshot = await scrapeGoalieStats(season);
 
       // Validate that we got data
       const totalGoalies = Object.values(goalieStatsSnapshot.divisions).reduce(
@@ -350,5 +382,3 @@ main().catch((error) => {
   console.error("Unhandled error:", error);
   process.exit(1);
 });
-
-

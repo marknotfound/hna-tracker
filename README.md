@@ -27,6 +27,7 @@ A daily standings tracker for HNA New Jersey ice hockey leagues.
 hna-tracker/
 ├── src/
 │   ├── index.ts          # Scraper CLI entry point
+│   ├── seasons.ts        # Season config (leagueIDs, divisions, columns)
 │   ├── scraper.ts        # Cheerio-based HNA scraper
 │   ├── types.ts          # Shared TypeScript interfaces
 │   └── frontend/         # React frontend
@@ -35,14 +36,35 @@ hna-tracker/
 │       ├── DivisionToggle.tsx
 │       └── styles.css
 ├── data/
-│   ├── index.json        # Metadata (available dates, divisions)
-│   └── snapshots/        # Daily JSON snapshots
-│       └── YYYY-MM-DD.json
+│   ├── seasons.json      # Manifest of available seasons + default season
+│   └── seasons/
+│       └── <season-id>/  # e.g. summer-2026, winter-2025-2026
+│           ├── index.json        # Metadata (available dates, divisions)
+│           ├── snapshots/         # Daily standings snapshots (YYYY-MM-DD.json)
+│           ├── player-stats/      # Daily player stats snapshots
+│           └── goalie-stats/      # Daily goalie stats snapshots
 ├── .github/workflows/
 │   ├── scrape.yml        # Daily scraping (6 AM UTC)
 │   └── deploy.yml        # Deploy to GitHub Pages
 └── dist/                 # Built frontend (auto-generated)
 ```
+
+## Seasons
+
+The tracker is season-aware. Every season the app knows about is defined in
+`src/seasons.ts` (its HNA `leagueID`, divisions, division IDs, and standings
+column layout). The daily scraper tracks whichever season is marked `current`
+and writes its snapshots under `data/seasons/<season-id>/`.
+
+Previous seasons remain available to view via the season selector in the UI.
+The default view is the current season (`defaultSeason` in `data/seasons.json`,
+generated from the season config on each scrape).
+
+To roll over to a new season: add a new entry to `SEASONS` in
+`src/seasons.ts`, set its `current` flag to `true`, and clear it on the old
+season. The standings column indices can be customized per season because
+different HNA leagues expose different columns (for example, the summer league
+has no OTL column).
 
 ## Data Schema
 
@@ -123,8 +145,11 @@ For the scraper workflow to commit data:
 
 ## Data Source
 
-Data is scraped from the official HNA standings page:
-https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296
+Data is scraped from the official HNA standings pages. Each season uses its own
+`leagueID` (see `src/seasons.ts`):
+
+- Summer 2026: https://www.hna.com/leagues/standings.cfm?leagueID=6205&clientID=2296
+- Winter 2025–2026: https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296
 
 ## License
 
