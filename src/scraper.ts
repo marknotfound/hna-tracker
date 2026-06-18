@@ -1,43 +1,46 @@
 import * as cheerio from "cheerio";
-import { DailySnapshot, TeamStanding, DIVISION_NAMES } from "./types";
-
-const HNA_STANDINGS_URL =
-  "https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296";
+import { DailySnapshot, TeamStanding } from "./types";
+import {
+  SeasonConfig,
+  buildStandingsUrl,
+  fetchHnaPage,
+  getCurrentSeason,
+} from "./seasons";
 
 /**
- * Fetch and parse HNA standings using Cheerio
+ * Fetch and parse HNA standings for a season using Cheerio.
+ *
+ * Standings tables appear in the same order as the season's divisions, and the
+ * column layout (which differs between seasons) comes from the season config.
  */
-export async function scrapeStandings(): Promise<DailySnapshot> {
-  console.log("Fetching HNA standings page...");
+export async function scrapeStandings(
+  season: SeasonConfig = getCurrentSeason(),
+): Promise<DailySnapshot> {
+  console.log(`Fetching HNA standings page for ${season.label}...`);
 
-  const response = await fetch(HNA_STANDINGS_URL);
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch standings: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  const html = await response.text();
+  const html = await fetchHnaPage(buildStandingsUrl(season));
   const $ = cheerio.load(html);
 
   console.log("Parsing standings data...");
 
+  const cols = season.standingsColumns;
+  // A standings row needs at least as many cells as the highest column index
+  // we read, plus the team name in cell 0.
+  const minCells =
+    Math.max(cols.gp, cols.w, cols.l, cols.t, cols.otl ?? 0, cols.pts, cols.wpct) +
+    1;
+
   const divisions: Record<string, TeamStanding[]> = {};
 
-  // Tables appear in the same order as divisions on the page
-  // Find all tables with standings data (tables with 8+ columns of team data)
+  // Find all tables that look like standings tables (rows with enough cells).
   const standingsTables: ReturnType<typeof $>[] = [];
 
   $("table").each(function () {
-    const tbody = $(this).find("tbody");
-    const rows = tbody.find("tr");
+    const rows = $(this).find("tbody tr");
 
-    // Check if this looks like a standings table (has rows with 8 cells)
     let hasStandingsData = false;
     rows.each(function () {
-      const cells = $(this).find("td");
-      if (cells.length >= 8) {
+      if ($(this).find("td").length >= minCells) {
         hasStandingsData = true;
         return false; // break
       }
@@ -50,8 +53,8 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
 
   console.log(`Found ${standingsTables.length} standings tables`);
 
-  // Match tables to divisions in order
-  DIVISION_NAMES.forEach((divisionName, index) => {
+  // Match tables to divisions in order.
+  season.divisions.forEach((division, index) => {
     const teams: TeamStanding[] = [];
 
     if (index < standingsTables.length) {
@@ -61,8 +64,8 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
       rows.each(function () {
         const cells = $(this).find("td");
 
-        if (cells.length >= 8) {
-          // Get team name and abbreviation from the link inside the first cell
+        if (cells.length >= minCells) {
+          // Get team name and abbreviation from the link inside the first cell.
           // Structure: <a><span class="d-sm-inline">Full Name</span><span class="d-sm-none">ABBR</span></a>
           const teamCell = cells.eq(0);
           const teamLink = teamCell.find("a");
@@ -70,26 +73,22 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
           let teamAbbr = "";
 
           if (teamLink.length > 0) {
-            // Try to get the full name from the d-sm-inline span
             const fullNameSpan = teamLink.find("span.d-sm-inline");
             if (fullNameSpan.length > 0) {
               teamName = fullNameSpan.text().trim();
             } else {
-              // Fallback to link text
               teamName = teamLink.text().trim();
             }
 
-            // Get abbreviation from d-sm-none span
             const abbrSpan = teamLink.find("span.d-sm-none");
             if (abbrSpan.length > 0) {
               teamAbbr = abbrSpan.text().trim();
             }
           } else {
-            // Fallback to cell text if no link
             teamName = teamCell.text().trim();
           }
 
-          // Skip if it looks like a header
+          // Skip if it looks like a header.
           if (!teamName || teamName.toLowerCase() === "team") {
             return;
           }
@@ -97,21 +96,24 @@ export async function scrapeStandings(): Promise<DailySnapshot> {
           teams.push({
             team: teamName,
             abbr: teamAbbr || undefined,
-            gp: parseInt(cells.eq(1).text().trim(), 10) || 0,
-            w: parseInt(cells.eq(2).text().trim(), 10) || 0,
-            l: parseInt(cells.eq(3).text().trim(), 10) || 0,
-            t: parseInt(cells.eq(4).text().trim(), 10) || 0,
-            otl: parseInt(cells.eq(5).text().trim(), 10) || 0,
-            pts: parseInt(cells.eq(6).text().trim(), 10) || 0,
-            wpct: parseFloat(cells.eq(7).text().trim()) || 0,
+            gp: parseInt(cells.eq(cols.gp).text().trim(), 10) || 0,
+            w: parseInt(cells.eq(cols.w).text().trim(), 10) || 0,
+            l: parseInt(cells.eq(cols.l).text().trim(), 10) || 0,
+            t: parseInt(cells.eq(cols.t).text().trim(), 10) || 0,
+            otl:
+              cols.otl === null
+                ? 0
+                : parseInt(cells.eq(cols.otl).text().trim(), 10) || 0,
+            pts: parseInt(cells.eq(cols.pts).text().trim(), 10) || 0,
+            wpct: parseFloat(cells.eq(cols.wpct).text().trim()) || 0,
             position: teams.length + 1, // 1-indexed position
           });
         }
       });
     }
 
-    divisions[divisionName] = teams;
-    console.log(`  ${divisionName}: ${teams.length} teams`);
+    divisions[division.name] = teams;
+    console.log(`  ${division.name}: ${teams.length} teams`);
   });
 
   const snapshot: DailySnapshot = {

@@ -26,14 +26,25 @@ export interface SnapshotIndex {
   lastUpdated: string;
 }
 
-export const DIVISION_NAMES = [
-  "1-BRODEUR",
-  "2-MANNO",
-  "3-STEVENS NORTH",
-  "3-STEVENS SOUTH",
-] as const;
+// Division names vary by season, so a division is just a string key into the
+// per-season snapshot data. The available divisions for a season come from the
+// seasons manifest / that season's index.json.
+export type DivisionName = string;
 
-export type DivisionName = (typeof DIVISION_NAMES)[number];
+// Seasons manifest (data/seasons.json) describing every season available to
+// view. Each season's data lives under data/seasons/<id>/.
+export interface SeasonInfo {
+  id: string;
+  label: string;
+  leagueId: string;
+  current: boolean;
+  divisions: string[];
+}
+
+export interface SeasonsManifest {
+  defaultSeason: string;
+  seasons: SeasonInfo[];
+}
 
 // Chart data structure
 export interface ChartDataPoint {

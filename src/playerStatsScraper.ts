@@ -1,35 +1,25 @@
 import * as cheerio from "cheerio";
+import { PlayerStatsSnapshot, PlayerStats } from "./types";
 import {
-  PlayerStatsSnapshot,
-  PlayerStats,
-  DIVISION_NAMES,
-  DIVISION_IDS,
-  DivisionName,
-} from "./types";
-
-const HNA_STATS_BASE_URL =
-  "https://www.hna.com/leagues/stats_hockey.cfm?leagueID=5750&clientID=2296&printPage=1";
+  SeasonConfig,
+  SeasonDivision,
+  buildPlayerStatsUrl,
+  fetchHnaPage,
+  getCurrentSeason,
+} from "./seasons";
 
 /**
  * Fetch and parse player stats for a specific division
  */
 async function scrapeDivisionStats(
-  divisionName: DivisionName,
+  season: SeasonConfig,
+  division: SeasonDivision,
 ): Promise<PlayerStats[]> {
-  const divisionId = DIVISION_IDS[divisionName];
-  const url = `${HNA_STATS_BASE_URL}&divID=${divisionId}`;
+  const url = buildPlayerStatsUrl(season, division.divId);
 
-  console.log(`  Fetching ${divisionName} stats...`);
+  console.log(`  Fetching ${division.name} stats...`);
 
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch stats for ${divisionName}: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  const html = await response.text();
+  const html = await fetchHnaPage(url);
   const $ = cheerio.load(html);
 
   const players: PlayerStats[] = [];
@@ -116,21 +106,23 @@ async function scrapeDivisionStats(
 }
 
 /**
- * Fetch and parse HNA player stats for all divisions
+ * Fetch and parse HNA player stats for all divisions in a season
  */
-export async function scrapePlayerStats(): Promise<PlayerStatsSnapshot> {
-  console.log("Fetching HNA player stats...");
+export async function scrapePlayerStats(
+  season: SeasonConfig = getCurrentSeason(),
+): Promise<PlayerStatsSnapshot> {
+  console.log(`Fetching HNA player stats for ${season.label}...`);
 
   const divisions: Record<string, PlayerStats[]> = {};
 
   // Scrape each division's stats
-  for (const divisionName of DIVISION_NAMES) {
+  for (const division of season.divisions) {
     try {
-      const stats = await scrapeDivisionStats(divisionName);
-      divisions[divisionName] = stats;
+      const stats = await scrapeDivisionStats(season, division);
+      divisions[division.name] = stats;
     } catch (error) {
-      console.error(`  Error scraping ${divisionName}:`, error);
-      divisions[divisionName] = [];
+      console.error(`  Error scraping ${division.name}:`, error);
+      divisions[division.name] = [];
     }
   }
 

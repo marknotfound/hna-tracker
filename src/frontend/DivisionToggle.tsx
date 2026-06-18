@@ -7,13 +7,26 @@ interface DivisionToggleProps {
   onChange: (division: DivisionName) => void;
 }
 
-// Short display names for the toggle buttons
-const DIVISION_SHORT_NAMES: Record<DivisionName, string> = {
-  "1-BRODEUR": "Brodeur",
-  "2-MANNO": "Manno",
-  "3-STEVENS NORTH": "Stevens N",
-  "3-STEVENS SOUTH": "Stevens S",
-};
+// Derive a leading number (if the division is named like "1-BRODEUR") and a
+// readable label from a division name. Works for any season's divisions.
+function formatDivision(division: DivisionName): {
+  number: string;
+  name: string;
+} {
+  const match = division.match(/^(\d+)\s*-\s*(.+)$/);
+  if (match) {
+    return { number: match[1], name: titleCase(match[2]) };
+  }
+  return { number: "", name: titleCase(division) };
+}
+
+function titleCase(value: string): string {
+  return value
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word))
+    .join(" ");
+}
 
 function DivisionToggle({
   divisions,
@@ -26,22 +39,23 @@ function DivisionToggle({
       role="tablist"
       aria-label="Select division"
     >
-      {divisions.map((division) => (
-        <button
-          key={division}
-          role="tab"
-          aria-selected={selected === division}
-          className={`toggle-button ${selected === division ? "active" : ""}`}
-          onClick={() => onChange(division)}
-        >
-          <span className="toggle-number">{division.split("-")[0]}</span>
-          <span className="toggle-name">{DIVISION_SHORT_NAMES[division]}</span>
-        </button>
-      ))}
+      {divisions.map((division) => {
+        const { number, name } = formatDivision(division);
+        return (
+          <button
+            key={division}
+            role="tab"
+            aria-selected={selected === division}
+            className={`toggle-button ${selected === division ? "active" : ""}`}
+            onClick={() => onChange(division)}
+          >
+            {number && <span className="toggle-number">{number}</span>}
+            <span className="toggle-name">{name}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
 export default DivisionToggle;
-
-

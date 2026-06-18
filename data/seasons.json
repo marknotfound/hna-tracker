@@ -1,0 +1,28 @@
+{
+  "defaultSeason": "summer-2026",
+  "seasons": [
+    {
+      "id": "summer-2026",
+      "label": "Summer 2026",
+      "leagueId": "6205",
+      "current": true,
+      "divisions": [
+        "Canes",
+        "Habs",
+        "Knights"
+      ]
+    },
+    {
+      "id": "winter-2025-2026",
+      "label": "Winter 2025–2026",
+      "leagueId": "5750",
+      "current": false,
+      "divisions": [
+        "1-BRODEUR",
+        "2-MANNO",
+        "3-STEVENS NORTH",
+        "3-STEVENS SOUTH"
+      ]
+    }
+  ]
+}

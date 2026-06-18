@@ -26,15 +26,9 @@ export interface SnapshotIndex {
   lastUpdated: string;
 }
 
-// Division names as they appear on the HNA website
-export const DIVISION_NAMES = [
-  "1-BRODEUR",
-  "2-MANNO",
-  "3-STEVENS NORTH",
-  "3-STEVENS SOUTH",
-] as const;
-
-export type DivisionName = (typeof DIVISION_NAMES)[number];
+// Division names vary by season (see src/seasons.ts), so a division is just a
+// string key into the per-season snapshot data.
+export type DivisionName = string;
 
 // Player statistics interface - all columns from the stats table
 export interface PlayerStats {
@@ -68,14 +62,6 @@ export interface PlayerStatsIndex {
   dates: string[];
   lastUpdated: string;
 }
-
-// Division IDs for player stats scraping
-export const DIVISION_IDS: Record<DivisionName, string> = {
-  "1-BRODEUR": "129531",
-  "2-MANNO": "129533",
-  "3-STEVENS NORTH": "129532",
-  "3-STEVENS SOUTH": "130945",
-};
 
 // Goalie statistics interface - all columns from the goalie stats table
 export interface GoalieStats {

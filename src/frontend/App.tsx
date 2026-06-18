@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DivisionName,
-  DIVISION_NAMES,
   DailySnapshot,
   SnapshotIndex,
   PlayerStatsSnapshot,
@@ -9,6 +8,8 @@ import {
   GoalieStatsSnapshot,
   GoalieStatsIndex,
   GOALIE_MIN_GP,
+  SeasonInfo,
+  SeasonsManifest,
 } from "./types";
 import StandingsChart from "./StandingsChart";
 import PlayerStatsChart from "./PlayerStatsChart";
@@ -19,13 +20,32 @@ import { sampleSnapshots } from "./sampleSnapshots";
 
 // Data base URL - use relative path that works in both dev and production
 const DATA_BASE_URL = "./data";
-const PLAYER_STATS_BASE_URL = "./data/player-stats";
-const GOALIE_STATS_BASE_URL = "./data/goalie-stats";
 
-// Check for goalie stats feature flag in URL query string
-const urlParams = new URLSearchParams(window.location.search);
+// Per-season data lives under data/seasons/<id>/.
+function seasonBaseUrl(seasonId: string): string {
+  return `${DATA_BASE_URL}/seasons/${seasonId}`;
+}
+
+// Parse the URL hash into a season + division selection. Format:
+//   #<seasonId>/<division>
+function parseHash(): { seasonId?: string; division?: string } {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return {};
+  const slash = hash.indexOf("/");
+  if (slash === -1) {
+    // Legacy hash with just a division name.
+    return { division: decodeURIComponent(hash) };
+  }
+  return {
+    seasonId: decodeURIComponent(hash.slice(0, slash)),
+    division: decodeURIComponent(hash.slice(slash + 1)),
+  };
+}
 
 function App() {
+  const [seasons, setSeasons] = useState<SeasonInfo[]>([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>("");
+  const [divisions, setDivisions] = useState<DivisionName[]>([]);
   const [snapshots, setSnapshots] = useState<DailySnapshot[]>([]);
   const [playerStatsSnapshots, setPlayerStatsSnapshots] = useState<
     PlayerStatsSnapshot[]
@@ -33,11 +53,15 @@ function App() {
   const [goalieStatsSnapshots, setGoalieStatsSnapshots] = useState<
     GoalieStatsSnapshot[]
   >([]);
-  const [selectedDivision, setSelectedDivision] =
-    useState<DivisionName>("1-BRODEUR");
+  const [selectedDivision, setSelectedDivision] = useState<DivisionName>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  const selectedSeason = useMemo(
+    () => seasons.find((s) => s.id === selectedSeasonId),
+    [seasons, selectedSeasonId],
+  );
 
   // Sample snapshots for chart display (28 on desktop, 14 on mobile)
   const sampledSnapshots = useMemo(
@@ -53,144 +77,39 @@ function App() {
     [goalieStatsSnapshots, isMobile],
   );
 
-  // Load data on mount
+  // Load the seasons manifest, then the default (or hash-selected) season.
   useEffect(() => {
-    loadData();
-
-    // Handle URL hash for division selection
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1);
-      if (hash && DIVISION_NAMES.includes(hash as DivisionName)) {
-        setSelectedDivision(hash as DivisionName);
-      }
-    };
-
-    handleHashChange();
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    initialize();
   }, []);
 
-  const loadData = async () => {
+  const initialize = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // First, try to load the standings index
-      const indexResponse = await fetch(`${DATA_BASE_URL}/index.json`);
-
-      if (!indexResponse.ok) {
+      const manifestResponse = await fetch(`${DATA_BASE_URL}/seasons.json`);
+      if (!manifestResponse.ok) {
         throw new Error(
           "No data available yet. Run the scraper first: yarn scrape",
         );
       }
 
-      const index: SnapshotIndex = await indexResponse.json();
-
-      if (index.dates.length === 0) {
-        throw new Error("No snapshots available yet. Run: yarn scrape");
+      const manifest: SeasonsManifest = await manifestResponse.json();
+      if (!manifest.seasons || manifest.seasons.length === 0) {
+        throw new Error("No seasons available yet. Run: yarn scrape");
       }
 
-      // Load all standings snapshots in parallel
-      const snapshotPromises = index.dates.map(async (date) => {
-        const response = await fetch(`${DATA_BASE_URL}/snapshots/${date}.json`);
-        if (!response.ok) {
-          console.warn(`Failed to load snapshot for ${date}`);
-          return null;
-        }
-        return response.json() as Promise<DailySnapshot>;
-      });
+      setSeasons(manifest.seasons);
 
-      const loadedSnapshots = await Promise.all(snapshotPromises);
-      const validSnapshots = loadedSnapshots.filter(
-        (s): s is DailySnapshot => s !== null,
-      );
+      // Default to the current season (manifest.defaultSeason), unless the URL
+      // hash points at a specific season.
+      const { seasonId: hashSeasonId, division: hashDivision } = parseHash();
+      const initialSeason =
+        manifest.seasons.find((s) => s.id === hashSeasonId) ??
+        manifest.seasons.find((s) => s.id === manifest.defaultSeason) ??
+        manifest.seasons[0];
 
-      // Sort by date ascending for chart display
-      validSnapshots.sort((a, b) => a.date.localeCompare(b.date));
-
-      setSnapshots(validSnapshots);
-
-      // Try to load player stats (may not exist yet)
-      try {
-        const playerStatsIndexResponse = await fetch(
-          `${PLAYER_STATS_BASE_URL}/index.json`,
-        );
-
-        if (playerStatsIndexResponse.ok) {
-          const playerStatsIndex: PlayerStatsIndex =
-            await playerStatsIndexResponse.json();
-
-          if (playerStatsIndex.dates.length > 0) {
-            // Load all player stats snapshots in parallel
-            const playerStatsPromises = playerStatsIndex.dates.map(
-              async (date) => {
-                const response = await fetch(
-                  `${PLAYER_STATS_BASE_URL}/snapshots/${date}.json`,
-                );
-                if (!response.ok) {
-                  console.warn(`Failed to load player stats for ${date}`);
-                  return null;
-                }
-                return response.json() as Promise<PlayerStatsSnapshot>;
-              },
-            );
-
-            const loadedPlayerStats = await Promise.all(playerStatsPromises);
-            const validPlayerStats = loadedPlayerStats.filter(
-              (s): s is PlayerStatsSnapshot => s !== null,
-            );
-
-            // Sort by date ascending for chart display
-            validPlayerStats.sort((a, b) => a.date.localeCompare(b.date));
-
-            setPlayerStatsSnapshots(validPlayerStats);
-          }
-        }
-      } catch (playerStatsErr) {
-        // Player stats not available yet, that's okay
-        console.warn("Player stats not available yet:", playerStatsErr);
-      }
-
-      // Try to load goalie stats if feature flag is enabled (may not exist yet)
-      try {
-        const goalieStatsIndexResponse = await fetch(
-          `${GOALIE_STATS_BASE_URL}/index.json`,
-        );
-
-        if (goalieStatsIndexResponse.ok) {
-          const goalieStatsIndex: GoalieStatsIndex =
-            await goalieStatsIndexResponse.json();
-
-          if (goalieStatsIndex.dates.length > 0) {
-            // Load all goalie stats snapshots in parallel
-            const goalieStatsPromises = goalieStatsIndex.dates.map(
-              async (date) => {
-                const response = await fetch(
-                  `${GOALIE_STATS_BASE_URL}/snapshots/${date}.json`,
-                );
-                if (!response.ok) {
-                  console.warn(`Failed to load goalie stats for ${date}`);
-                  return null;
-                }
-                return response.json() as Promise<GoalieStatsSnapshot>;
-              },
-            );
-
-            const loadedGoalieStats = await Promise.all(goalieStatsPromises);
-            const validGoalieStats = loadedGoalieStats.filter(
-              (s): s is GoalieStatsSnapshot => s !== null,
-            );
-
-            // Sort by date ascending for chart display
-            validGoalieStats.sort((a, b) => a.date.localeCompare(b.date));
-
-            setGoalieStatsSnapshots(validGoalieStats);
-          }
-        }
-      } catch (goalieStatsErr) {
-        // Goalie stats not available yet, that's okay
-        console.warn("Goalie stats not available yet:", goalieStatsErr);
-      }
+      await loadSeasonData(initialSeason, hashDivision);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
@@ -198,10 +117,128 @@ function App() {
     }
   };
 
-  const handleDivisionChange = useCallback((division: DivisionName) => {
+  const loadSeasonData = async (
+    season: SeasonInfo,
+    preferredDivision?: string,
+  ) => {
+    setSelectedSeasonId(season.id);
+    const base = seasonBaseUrl(season.id);
+
+    // Load the standings index for this season.
+    const indexResponse = await fetch(`${base}/index.json`);
+    if (!indexResponse.ok) {
+      throw new Error(`No data available yet for ${season.label}.`);
+    }
+
+    const index: SnapshotIndex = await indexResponse.json();
+
+    // Divisions come from the season's index (falling back to the manifest).
+    const seasonDivisions =
+      index.divisions && index.divisions.length > 0
+        ? index.divisions
+        : season.divisions;
+    setDivisions(seasonDivisions);
+
+    // Pick the division to show: the requested one if it exists this season,
+    // otherwise the first division.
+    const division =
+      preferredDivision && seasonDivisions.includes(preferredDivision)
+        ? preferredDivision
+        : seasonDivisions[0];
     setSelectedDivision(division);
-    window.location.hash = division;
-  }, []);
+    updateHash(season.id, division);
+
+    // Load all standings snapshots in parallel.
+    const loadedSnapshots = await Promise.all(
+      index.dates.map(async (date) => {
+        const response = await fetch(`${base}/snapshots/${date}.json`);
+        if (!response.ok) {
+          console.warn(`Failed to load snapshot for ${date}`);
+          return null;
+        }
+        return response.json() as Promise<DailySnapshot>;
+      }),
+    );
+    const validSnapshots = loadedSnapshots
+      .filter((s): s is DailySnapshot => s !== null)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    setSnapshots(validSnapshots);
+
+    // Load player stats (may not exist for a season yet).
+    setPlayerStatsSnapshots(
+      await loadStatsSnapshots<PlayerStatsSnapshot>(`${base}/player-stats`),
+    );
+
+    // Load goalie stats (may not exist for a season yet).
+    setGoalieStatsSnapshots(
+      await loadStatsSnapshots<GoalieStatsSnapshot>(`${base}/goalie-stats`),
+    );
+  };
+
+  // Generic loader for the player/goalie stats index + snapshots of a season.
+  async function loadStatsSnapshots<
+    T extends PlayerStatsSnapshot | GoalieStatsSnapshot,
+  >(base: string): Promise<T[]> {
+    try {
+      const indexResponse = await fetch(`${base}/index.json`);
+      if (!indexResponse.ok) return [];
+
+      const index: PlayerStatsIndex | GoalieStatsIndex =
+        await indexResponse.json();
+      if (!index.dates || index.dates.length === 0) return [];
+
+      const loaded = await Promise.all(
+        index.dates.map(async (date) => {
+          const response = await fetch(`${base}/snapshots/${date}.json`);
+          if (!response.ok) {
+            console.warn(`Failed to load stats for ${date}`);
+            return null;
+          }
+          return response.json() as Promise<T>;
+        }),
+      );
+
+      return loaded
+        .filter((s): s is T => s !== null)
+        .sort((a, b) => a.date.localeCompare(b.date));
+    } catch (err) {
+      console.warn("Stats not available yet:", err);
+      return [];
+    }
+  }
+
+  const updateHash = (seasonId: string, division: string) => {
+    window.location.hash = `${encodeURIComponent(seasonId)}/${encodeURIComponent(
+      division,
+    )}`;
+  };
+
+  const handleSeasonChange = useCallback(
+    async (seasonId: string) => {
+      const season = seasons.find((s) => s.id === seasonId);
+      if (!season) return;
+      try {
+        setLoading(true);
+        setError(null);
+        await loadSeasonData(season);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [seasons],
+  );
+
+  const handleDivisionChange = useCallback(
+    (division: DivisionName) => {
+      setSelectedDivision(division);
+      if (selectedSeasonId) {
+        updateHash(selectedSeasonId, division);
+      }
+    },
+    [selectedSeasonId],
+  );
 
   if (loading) {
     return (
@@ -229,7 +266,7 @@ function App() {
           <div className="error">
             <h2>Unable to Load Data</h2>
             <p>{error}</p>
-            <button onClick={loadData} className="retry-button">
+            <button onClick={initialize} className="retry-button">
               Try Again
             </button>
           </div>
@@ -238,18 +275,38 @@ function App() {
     );
   }
 
+  const standingsUrl = selectedSeason
+    ? `https://www.hna.com/leagues/standings.cfm?leagueID=${selectedSeason.leagueId}&clientID=2296`
+    : "https://www.hna.com/leagues/standings.cfm?clientID=2296";
+
   return (
     <div className="app">
       <header className="header">
         <h1>HNA Standings Tracker</h1>
-        <p className="subtitle">
-          New Jersey Standings Over Time
-        </p>
+        <p className="subtitle">New Jersey Standings Over Time</p>
       </header>
 
       <main className="main">
+        {seasons.length > 1 && (
+          <div className="season-selector">
+            <label htmlFor="season-select">Season</label>
+            <select
+              id="season-select"
+              value={selectedSeasonId}
+              onChange={(e) => handleSeasonChange(e.target.value)}
+            >
+              {seasons.map((season) => (
+                <option key={season.id} value={season.id}>
+                  {season.label}
+                  {season.current ? " (current)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <DivisionToggle
-          divisions={DIVISION_NAMES as unknown as DivisionName[]}
+          divisions={divisions}
           selected={selectedDivision}
           onChange={handleDivisionChange}
         />
@@ -355,7 +412,7 @@ function App() {
         <p>
           Data sourced from{" "}
           <a
-            href="https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296"
+            href={standingsUrl}
             target="_blank"
             rel="noopener noreferrer"
           >
