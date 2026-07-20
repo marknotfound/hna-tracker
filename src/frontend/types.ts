@@ -134,7 +134,16 @@ export interface GoalieStatsIndex {
 // Goalie stats chart types
 export type GoalieStatType = "so" | "gaa" | "svPct";
 
-// Minimum games played to display in goalie charts
+// Minimum games played to display in goalie charts (standard leagues).
 export const GOALIE_MIN_GP = 6;
+
+// The summer league plays a shorter season, so goalies qualify with fewer games.
+export const SUMMER_GOALIE_MIN_GP = 2;
+
+// Resolve the minimum games-played threshold for a season. Summer seasons use a
+// lower minimum than the standard leagues.
+export function goalieMinGp(seasonId: string | undefined): number {
+  return seasonId?.startsWith("summer") ? SUMMER_GOALIE_MIN_GP : GOALIE_MIN_GP;
+}
 
 

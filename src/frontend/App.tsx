@@ -7,7 +7,7 @@ import {
   PlayerStatsIndex,
   GoalieStatsSnapshot,
   GoalieStatsIndex,
-  GOALIE_MIN_GP,
+  goalieMinGp,
   SeasonInfo,
   SeasonsManifest,
 } from "./types";
@@ -61,6 +61,12 @@ function App() {
   const selectedSeason = useMemo(
     () => seasons.find((s) => s.id === selectedSeasonId),
     [seasons, selectedSeasonId],
+  );
+
+  // Minimum goalie games played for the selected season (summer uses a lower bar).
+  const goalieMin = useMemo(
+    () => goalieMinGp(selectedSeasonId),
+    [selectedSeasonId],
   );
 
   // Sample snapshots for chart display (28 on desktop, 14 on mobile)
@@ -355,7 +361,7 @@ function App() {
           <>
             <h2 className="section-title">Goalie Statistics</h2>
             <p className="stats-note">
-              Only goalies with minimum {GOALIE_MIN_GP} games played in the selected
+              Only goalies with minimum {goalieMin} games played in the selected
               division are represented.
             </p>
 
@@ -366,6 +372,7 @@ function App() {
                 division={selectedDivision}
                 statType="svPct"
                 topN={10}
+                minGp={goalieMin}
               />
             </div>
 
@@ -376,6 +383,7 @@ function App() {
                 division={selectedDivision}
                 statType="gaa"
                 topN={10}
+                minGp={goalieMin}
               />
             </div>
 
@@ -386,6 +394,7 @@ function App() {
                 division={selectedDivision}
                 statType="so"
                 topN={10}
+                minGp={goalieMin}
               />
             </div>
           </>

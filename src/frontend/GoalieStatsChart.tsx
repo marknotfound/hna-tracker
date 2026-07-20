@@ -22,6 +22,9 @@ import {
   GOALIE_MIN_GP,
 } from "./types";
 
+// Minimum games played required for a goalie to appear in the charts. Defaults
+// to the standard-league threshold; callers pass the season-specific value.
+
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
@@ -39,6 +42,7 @@ interface GoalieStatsChartProps {
   division: DivisionName;
   statType: GoalieStatType;
   topN?: number; // Show top N goalies, default 10
+  minGp?: number; // Minimum games played to qualify, default GOALIE_MIN_GP
 }
 
 // Distinctive goalie colors - each goalie gets a unique color
@@ -95,6 +99,7 @@ function GoalieStatsChart({
   division,
   statType,
   topN = 10,
+  minGp = GOALIE_MIN_GP,
 }: GoalieStatsChartProps) {
   // Get stat value for a goalie
   const getStatValue = (goalie: GoalieStats): number => {
@@ -126,7 +131,7 @@ function GoalieStatsChart({
       const divisionData = snapshot.divisions[division] || [];
 
       // Filter goalies with minimum games played
-      const qualified = divisionData.filter((g) => g.gp >= GOALIE_MIN_GP);
+      const qualified = divisionData.filter((g) => g.gp >= minGp);
 
       // Sort based on stat type (ascending for GAA, descending for others)
       const sortAsc = STAT_SORT_ASCENDING[statType];
@@ -151,7 +156,7 @@ function GoalieStatsChart({
         goalies: ranked,
       };
     });
-  }, [snapshots, division, statType]);
+  }, [snapshots, division, statType, minGp]);
 
   const chartData = useMemo(() => {
     if (rankedSnapshots.length === 0) {
@@ -399,7 +404,7 @@ function GoalieStatsChart({
     return (
       <div className="chart-empty">
         <p>
-          No goalies with {GOALIE_MIN_GP}+ games played in this division yet.
+          No goalies with {minGp}+ games played in this division yet.
         </p>
       </div>
     );
