@@ -103,7 +103,7 @@ export interface GoalieStatsIndex {
 export const GOALIE_MIN_GP = 6;
 
 // The summer league plays a shorter season, so goalies qualify with fewer games.
-export const SUMMER_GOALIE_MIN_GP = 3;
+export const SUMMER_GOALIE_MIN_GP = 2;
 
 // Resolve the minimum games-played threshold for a season. Summer seasons use a
 // lower minimum than the standard leagues.
