@@ -1,0 +1,179 @@
+{
+  "date": "2026-08-04",
+  "divisions": {
+    "Canes": [
+      {
+        "team": "Katie O's",
+        "abbr": "KAT",
+        "gp": 6,
+        "w": 5,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 10,
+        "wpct": 0.833,
+        "position": 1
+      },
+      {
+        "team": "Wolves",
+        "abbr": "WOL",
+        "gp": 6,
+        "w": 4,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 8,
+        "wpct": 0.667,
+        "position": 2
+      },
+      {
+        "team": "Rabid Beavers",
+        "abbr": "RAB",
+        "gp": 6,
+        "w": 3,
+        "l": 3,
+        "t": 0,
+        "otl": 0,
+        "pts": 6,
+        "wpct": 0.5,
+        "position": 3
+      },
+      {
+        "team": "Yetis",
+        "abbr": "YET",
+        "gp": 5,
+        "w": 2,
+        "l": 3,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.4,
+        "position": 4
+      },
+      {
+        "team": "Stingers",
+        "abbr": "STI",
+        "gp": 4,
+        "w": 1,
+        "l": 3,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.25,
+        "position": 5
+      },
+      {
+        "team": "The Moos of Summer",
+        "abbr": "THE",
+        "gp": 5,
+        "w": 1,
+        "l": 4,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.2,
+        "position": 6
+      }
+    ],
+    "Habs": [
+      {
+        "team": "Hammerheads",
+        "abbr": "HAM",
+        "gp": 5,
+        "w": 4,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 8,
+        "wpct": 0.8,
+        "position": 1
+      },
+      {
+        "team": "Benders",
+        "abbr": "BEN",
+        "gp": 5,
+        "w": 3,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 6,
+        "wpct": 0.6,
+        "position": 2
+      },
+      {
+        "team": "H-Town Assassins",
+        "abbr": "H-T",
+        "gp": 5,
+        "w": 1,
+        "l": 3,
+        "t": 1,
+        "otl": 0,
+        "pts": 3,
+        "wpct": 0.3,
+        "position": 3
+      },
+      {
+        "team": "Ice Pack",
+        "abbr": "ICE",
+        "gp": 5,
+        "w": 1,
+        "l": 3,
+        "t": 1,
+        "otl": 0,
+        "pts": 3,
+        "wpct": 0.3,
+        "position": 4
+      }
+    ],
+    "Knights": [
+      {
+        "team": "Phantoms",
+        "abbr": "PHA",
+        "gp": 6,
+        "w": 5,
+        "l": 0,
+        "t": 1,
+        "otl": 0,
+        "pts": 11,
+        "wpct": 0.917,
+        "position": 1
+      },
+      {
+        "team": "Rebels",
+        "abbr": "REB",
+        "gp": 6,
+        "w": 4,
+        "l": 1,
+        "t": 1,
+        "otl": 0,
+        "pts": 9,
+        "wpct": 0.75,
+        "position": 2
+      },
+      {
+        "team": "Cold Front",
+        "abbr": "COL",
+        "gp": 6,
+        "w": 2,
+        "l": 4,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.333,
+        "position": 3
+      },
+      {
+        "team": "Shell Shockers",
+        "abbr": "SHE",
+        "gp": 6,
+        "w": 0,
+        "l": 6,
+        "t": 0,
+        "otl": 0,
+        "pts": 0,
+        "wpct": 0,
+        "position": 4
+      }
+    ]
+  }
+}
