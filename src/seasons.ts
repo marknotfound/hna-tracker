@@ -60,10 +60,25 @@ export interface SeasonConfig {
 
 export const SEASONS: SeasonConfig[] = [
   {
+    id: "winter-2026-2027",
+    label: "Winter 2026–2027",
+    leagueId: "5750",
+    current: true,
+    divisions: [
+      { name: "1-BRODEUR", divId: "135399" },
+      { name: "2-MANNO NORTH", divId: "135401" },
+      { name: "2-MANNO SOUTH", divId: "136538" },
+      { name: "3-STEVENS NORTH", divId: "135400" },
+      { name: "3-STEVENS SOUTH", divId: "135404" },
+    ],
+    // Winter standings: Team, GP, W, L, T, OTL, PTS, WPCT
+    standingsColumns: { gp: 1, w: 2, l: 3, t: 4, otl: 5, pts: 6, wpct: 7 },
+  },
+  {
     id: "summer-2026",
     label: "Summer 2026",
     leagueId: "6205",
-    current: true,
+    current: false,
     divisions: [
       { name: "Canes", divId: "134870" },
       { name: "Habs", divId: "134879" },
