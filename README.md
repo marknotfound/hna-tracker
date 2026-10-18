@@ -9,7 +9,7 @@ A daily standings tracker for HNA New Jersey ice hockey leagues.
 - **Daily Automated Scraping**: GitHub Actions runs daily to capture standings snapshots
 - **Historical Data**: Track team standings positions over time
 - **Interactive Charts**: Line charts showing standings progression with react-chartjs-2
-- **Division Toggle**: Quick switch between 4 divisions (Brodeur, Manno, Stevens North, Stevens South)
+- **Division Toggle**: Quick switch between divisions (Winter 2026–2027: Brodeur, Manno North, Manno South, Stevens North, Stevens South)
 - **Dark Theme UI**: Modern, responsive design with distinctive aesthetics
 - **URL Hash Support**: Shareable links to specific divisions
 
@@ -38,7 +38,7 @@ hna-tracker/
 ├── data/
 │   ├── seasons.json      # Manifest of available seasons + default season
 │   └── seasons/
-│       └── <season-id>/  # e.g. summer-2026, winter-2025-2026
+│       └── <season-id>/  # e.g. winter-2026-2027, summer-2026
 │           ├── index.json        # Metadata (available dates, divisions)
 │           ├── snapshots/         # Daily standings snapshots (YYYY-MM-DD.json)
 │           ├── player-stats/      # Daily player stats snapshots
@@ -75,7 +75,8 @@ interface DailySnapshot {
   date: string; // "2024-12-15"
   divisions: {
     "1-BRODEUR": TeamStanding[];
-    "2-MANNO": TeamStanding[];
+    "2-MANNO NORTH": TeamStanding[];
+    "2-MANNO SOUTH": TeamStanding[];
     "3-STEVENS NORTH": TeamStanding[];
     "3-STEVENS SOUTH": TeamStanding[];
   };
@@ -146,8 +147,11 @@ For the scraper workflow to commit data:
 ## Data Source
 
 Data is scraped from the official HNA standings pages. Each season uses its own
-`leagueID` (see `src/seasons.ts`):
+`leagueID` (see `src/seasons.ts`). Note that HNA reuses the winter league's
+`leagueID` (5750) every year and serves whichever winter season is newest, so
+only the current winter season can be scraped live:
 
+- Winter 2026–2027: https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296
 - Summer 2026: https://www.hna.com/leagues/standings.cfm?leagueID=6205&clientID=2296
 - Winter 2025–2026: https://www.hna.com/leagues/standings.cfm?leagueID=5750&clientID=2296
 
