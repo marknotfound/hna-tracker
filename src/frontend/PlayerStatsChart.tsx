@@ -42,21 +42,21 @@ interface PlayerStatsChartProps {
 
 // Distinctive player colors - each player gets a unique color
 const PLAYER_COLORS = [
-  "#00D4FF", // Cyan
-  "#FF6B6B", // Coral Red
-  "#4ADE80", // Emerald
-  "#FBBF24", // Amber
-  "#A78BFA", // Violet
-  "#F472B6", // Pink
-  "#60A5FA", // Sky Blue
-  "#FB923C", // Orange
-  "#2DD4BF", // Teal
-  "#E879F9", // Fuchsia
-  "#84CC16", // Lime
-  "#F43F5E", // Rose
-  "#22D3EE", // Cyan-400
-  "#C084FC", // Purple-400
-  "#34D399", // Emerald-400
+  "#E8A33D", // Amber
+  "#6FA8DC", // Steel Blue
+  "#D9654B", // Brick
+  "#8FBF7A", // Sage
+  "#C9A0DC", // Lilac
+  "#E0D27A", // Straw
+  "#4FB3A9", // Teal
+  "#D98AA5", // Rose
+  "#A3A3A3", // Gray
+  "#B5835A", // Tan
+  "#7FA3C7", // Slate Blue
+  "#E07A5F", // Terracotta
+  "#B8C46A", // Olive
+  "#9C8FD6", // Periwinkle
+  "#CFC6B0", // Bone
 ];
 
 // Generate a consistent color index from a name (hash-based)
@@ -180,7 +180,7 @@ function PlayerStatsChart({
         pointRadius: 4,
         pointHoverRadius: 7,
         pointBackgroundColor: PLAYER_COLORS[colorIndex],
-        pointBorderColor: "#1a1a2e",
+        pointBorderColor: "#1d1d1c",
         pointBorderWidth: 2,
         tension: 0.3,
         fill: false,
@@ -218,9 +218,9 @@ function PlayerStatsChart({
         legend: {
           position: "top",
           labels: {
-            color: "#e5e5e5",
+            color: "#ece8df",
             font: {
-              family: "JetBrains Mono, monospace",
+              family: "DM Mono, monospace",
               size: 11,
             },
             padding: 15,
@@ -231,9 +231,9 @@ function PlayerStatsChart({
         title: {
           display: true,
           text: STAT_LABELS[statType],
-          color: "#ffffff",
+          color: "#ece8df",
           font: {
-            family: "Outfit, sans-serif",
+            family: "Archivo Narrow, sans-serif",
             size: 18,
             weight: "600",
           },
@@ -242,19 +242,19 @@ function PlayerStatsChart({
           },
         },
         tooltip: {
-          backgroundColor: "rgba(26, 26, 46, 0.95)",
-          titleColor: "#ffffff",
-          bodyColor: "#e5e5e5",
-          borderColor: "#00D4FF",
+          backgroundColor: "rgba(15, 15, 15, 0.95)",
+          titleColor: "#ece8df",
+          bodyColor: "#ece8df",
+          borderColor: "#E8A33D",
           borderWidth: 1,
           padding: 12,
           titleFont: {
-            family: "Outfit, sans-serif",
+            family: "Archivo, sans-serif",
             size: 14,
             weight: "600",
           },
           bodyFont: {
-            family: "JetBrains Mono, monospace",
+            family: "DM Mono, monospace",
             size: 12,
           },
           itemSort: (a: TooltipItem<"line">, b: TooltipItem<"line">) => {
@@ -296,12 +296,12 @@ function PlayerStatsChart({
       scales: {
         x: {
           grid: {
-            color: "rgba(255, 255, 255, 0.05)",
+            color: "rgba(255, 255, 255, 0.06)",
           },
           ticks: {
-            color: "#a3a3a3",
+            color: "#a8a397",
             font: {
-              family: "JetBrains Mono, monospace",
+              family: "DM Mono, monospace",
               size: 11,
             },
           },
@@ -311,12 +311,12 @@ function PlayerStatsChart({
           min: 0,
           max: topN + 1,
           grid: {
-            color: "rgba(255, 255, 255, 0.05)",
+            color: "rgba(255, 255, 255, 0.06)",
           },
           ticks: {
-            color: "#a3a3a3",
+            color: "#a8a397",
             font: {
-              family: "JetBrains Mono, monospace",
+              family: "DM Mono, monospace",
               size: 11,
             },
             stepSize: 1,
@@ -328,9 +328,9 @@ function PlayerStatsChart({
           title: {
             display: true,
             text: "Rank",
-            color: "#a3a3a3",
+            color: "#a8a397",
             font: {
-              family: "Outfit, sans-serif",
+              family: "Archivo, sans-serif",
               size: 13,
             },
           },
