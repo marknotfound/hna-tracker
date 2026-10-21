@@ -126,6 +126,23 @@ The frontend will be available at http://localhost:3000
 | `yarn dev`          | Start Vite development server                   |
 | `yarn build`        | Build for production                            |
 | `yarn preview`      | Preview production build locally                |
+| `yarn test`         | Run offline scraper regression tests            |
+| `yarn typecheck`    | Type-check scraper code and tests                |
+
+### Troubleshooting failed scrapes
+
+An HTTP 200 response does not guarantee league data: HNA can return a
+JavaScript robot-verification page instead. The scraper rejects that response
+with an explicit access error. It also reports the final response URL, status,
+content type, and size; an unexpected standings layout reports the page title
+and total versus usable table counts. Missing or additional division tables,
+or a division without teams, fail before saving a standings snapshot.
+
+These checks do not restore access if HNA blocks automated requests. For a
+403 or verification response, HNA must permit the runner's automated access or
+provide a supported data source before daily scraping can resume. Do not
+replace valid historical data with empty results or fabricate missing days.
+The offline tests use synthetic HTML fixtures and do not verify live access.
 
 ## Deployment
 
