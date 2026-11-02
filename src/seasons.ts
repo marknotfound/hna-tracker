@@ -11,6 +11,8 @@
  * standings field it exposes.
  */
 
+import * as cheerio from "cheerio";
+
 // Client ID is shared across every HNA league for this organization.
 export const CLIENT_ID = "2296";
 
@@ -137,15 +139,40 @@ export function buildGoalieStatsUrl(
   return `${HNA_BASE_URL}/stats_hockey.cfm?clientid=${CLIENT_ID}&leagueID=${season.leagueId}&divID=${divId}&statType=goalie&printPage=0`;
 }
 
-/** Fetch a page with the headers HNA expects, throwing on non-2xx. */
+/** Fetch a league page, rejecting HTTP errors and HTTP-200 verification pages. */
 export async function fetchHnaPage(url: string): Promise<string> {
   const response = await fetch(url, {
     headers: { "User-Agent": HNA_USER_AGENT },
+    signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) {
+    const accessHint =
+      response.status === 403 || response.status === 429
+        ? " HNA is denying or limiting access; no league data was retrieved."
+        : "";
     throw new Error(
-      `Failed to fetch ${url}: ${response.status} ${response.statusText}`,
+      `Failed to fetch ${url}: ${response.status} ${response.statusText}.${accessHint}`,
     );
   }
-  return response.text();
+
+  const html = await response.text();
+  const $ = cheerio.load(html);
+  console.log(
+    `Fetched ${response.url || url}: HTTP ${response.status}, ` +
+      `content-type ${response.headers.get("content-type") || "(missing)"}, ` +
+      `${html.length} characters`,
+  );
+  // Inspect visible text, not script source that might mention verification on
+  // an otherwise valid page. Cheerio also decodes HTML entities in the message.
+  $("script, style").remove();
+  const pageText = $("body").text().replace(/\s+/g, " ").trim();
+  if (/verify that you['’]re not a robot/i.test(pageText)) {
+    throw new Error(
+      `HNA returned a robot-verification page instead of league data for ${url} ` +
+        `(HTTP ${response.status}). Automated access must be permitted by HNA; ` +
+        "the scraper cannot parse this page as standings or stats.",
+    );
+  }
+
+  return html;
 }
