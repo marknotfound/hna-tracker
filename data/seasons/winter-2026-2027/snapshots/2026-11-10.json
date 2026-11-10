@@ -1,0 +1,327 @@
+{
+  "date": "2026-11-10",
+  "divisions": {
+    "1-BRODEUR": [
+      {
+        "team": "Renegades",
+        "abbr": "RNGD",
+        "gp": 3,
+        "w": 3,
+        "l": 0,
+        "t": 0,
+        "otl": 0,
+        "pts": 6,
+        "wpct": 1,
+        "position": 1
+      },
+      {
+        "team": "Morris Moose Knuckles",
+        "abbr": "KNKL",
+        "gp": 3,
+        "w": 2,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.667,
+        "position": 2
+      },
+      {
+        "team": "Stealth",
+        "abbr": "SLTH",
+        "gp": 3,
+        "w": 1,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.333,
+        "position": 3
+      },
+      {
+        "team": "H-Town Assassins",
+        "abbr": "H-T",
+        "gp": 3,
+        "w": 0,
+        "l": 3,
+        "t": 0,
+        "otl": 0,
+        "pts": 0,
+        "wpct": 0,
+        "position": 4
+      }
+    ],
+    "2-MANNO NORTH": [
+      {
+        "team": "Kong's Hockey Club",
+        "abbr": "Kong",
+        "gp": 3,
+        "w": 2,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.667,
+        "position": 1
+      },
+      {
+        "team": "Venom",
+        "abbr": "VENM",
+        "gp": 3,
+        "w": 2,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.667,
+        "position": 2
+      },
+      {
+        "team": "Outlaws",
+        "abbr": "OTLW",
+        "gp": 3,
+        "w": 1,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.333,
+        "position": 3
+      },
+      {
+        "team": "Yetis",
+        "abbr": "YETI",
+        "gp": 3,
+        "w": 1,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.333,
+        "position": 4
+      }
+    ],
+    "2-MANNO SOUTH": [
+      {
+        "team": "Wolves",
+        "abbr": "WLVE",
+        "gp": 3,
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "otl": 1,
+        "pts": 5,
+        "wpct": 0.833,
+        "position": 1
+      },
+      {
+        "team": "Force",
+        "abbr": "FORC",
+        "gp": 2,
+        "w": 2,
+        "l": 0,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 1,
+        "position": 2
+      },
+      {
+        "team": "Whalers",
+        "abbr": "WHAL",
+        "gp": 3,
+        "w": 2,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.667,
+        "position": 3
+      },
+      {
+        "team": "Dirty Rats",
+        "abbr": "RATS",
+        "gp": 3,
+        "w": 1,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.333,
+        "position": 4
+      },
+      {
+        "team": "Rattlers",
+        "abbr": "RTLR",
+        "gp": 3,
+        "w": 0,
+        "l": 3,
+        "t": 0,
+        "otl": 0,
+        "pts": 0,
+        "wpct": 0,
+        "position": 5
+      }
+    ],
+    "3-STEVENS NORTH": [
+      {
+        "team": "Rolling Thunder",
+        "abbr": "RTHN",
+        "gp": 3,
+        "w": 2,
+        "l": 0,
+        "t": 1,
+        "otl": 0,
+        "pts": 5,
+        "wpct": 0.833,
+        "position": 1
+      },
+      {
+        "team": "Hammerheads",
+        "abbr": "HAMR",
+        "gp": 3,
+        "w": 2,
+        "l": 0,
+        "t": 1,
+        "otl": 0,
+        "pts": 5,
+        "wpct": 0.833,
+        "position": 2
+      },
+      {
+        "team": "Stingers",
+        "abbr": "STNG",
+        "gp": 3,
+        "w": 2,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.667,
+        "position": 3
+      },
+      {
+        "team": "Benders",
+        "abbr": "BNDR",
+        "gp": 4,
+        "w": 2,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.5,
+        "position": 4
+      },
+      {
+        "team": "Omega Moo",
+        "abbr": "OMoo",
+        "gp": 3,
+        "w": 1,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.333,
+        "position": 5
+      },
+      {
+        "team": "Kodiakbears",
+        "abbr": "KODI",
+        "gp": 3,
+        "w": 1,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 2,
+        "wpct": 0.333,
+        "position": 6
+      },
+      {
+        "team": "Narwhals",
+        "abbr": "NRWL",
+        "gp": 3,
+        "w": 0,
+        "l": 3,
+        "t": 0,
+        "otl": 0,
+        "pts": 0,
+        "wpct": 0,
+        "position": 7
+      }
+    ],
+    "3-STEVENS SOUTH": [
+      {
+        "team": "Rebels",
+        "abbr": "REBL",
+        "gp": 3,
+        "w": 3,
+        "l": 0,
+        "t": 0,
+        "otl": 0,
+        "pts": 6,
+        "wpct": 1,
+        "position": 1
+      },
+      {
+        "team": "Warriors",
+        "abbr": "WARR",
+        "gp": 3,
+        "w": 2,
+        "l": 0,
+        "t": 1,
+        "otl": 0,
+        "pts": 5,
+        "wpct": 0.833,
+        "position": 2
+      },
+      {
+        "team": "Cold Front",
+        "abbr": "COLD",
+        "gp": 3,
+        "w": 2,
+        "l": 1,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.667,
+        "position": 3
+      },
+      {
+        "team": "Phantoms",
+        "abbr": "PHTM",
+        "gp": 4,
+        "w": 2,
+        "l": 2,
+        "t": 0,
+        "otl": 0,
+        "pts": 4,
+        "wpct": 0.5,
+        "position": 4
+      },
+      {
+        "team": "Montclair Menace",
+        "abbr": "MON",
+        "gp": 4,
+        "w": 0,
+        "l": 3,
+        "t": 1,
+        "otl": 0,
+        "pts": 1,
+        "wpct": 0.125,
+        "position": 5
+      },
+      {
+        "team": "Shell Shockers",
+        "abbr": "SHEL",
+        "gp": 3,
+        "w": 0,
+        "l": 3,
+        "t": 0,
+        "otl": 0,
+        "pts": 0,
+        "wpct": 0,
+        "position": 6
+      }
+    ]
+  }
+}
