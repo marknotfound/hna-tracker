@@ -27,8 +27,15 @@ export async function scrapeStandings(
   // A standings row needs at least as many cells as the highest column index
   // we read, plus the team name in cell 0.
   const minCells =
-    Math.max(cols.gp, cols.w, cols.l, cols.t, cols.otl ?? 0, cols.pts, cols.wpct) +
-    1;
+    Math.max(
+      cols.gp,
+      cols.w,
+      cols.l,
+      cols.t,
+      cols.otl ?? 0,
+      cols.pts,
+      cols.wpct,
+    ) + 1;
 
   const divisions: Record<string, TeamStanding[]> = {};
 
@@ -52,6 +59,20 @@ export async function scrapeStandings(
   });
 
   console.log(`Found ${standingsTables.length} standings tables`);
+
+  // Table order determines division assignment. A missing or additional table
+  // would shift teams into the wrong division, so do not save a partial result.
+  if (standingsTables.length !== season.divisions.length) {
+    const title = $("title").text().replace(/\s+/g, " ").trim().slice(0, 120);
+    throw new Error(
+      `Invalid standings page for ${season.label}: expected ` +
+        `${season.divisions.length} division tables, found ${standingsTables.length} ` +
+        `usable standings tables out of ${$("table").length} HTML tables ` +
+        `(rows require at least ${minCells} cells). ` +
+        `Page title: ${JSON.stringify(title || "(none)")}. ` +
+        `Source: ${buildStandingsUrl(season)}. No standings snapshot will be saved.`,
+    );
+  }
 
   // Match tables to divisions in order.
   season.divisions.forEach((division, index) => {
@@ -115,6 +136,16 @@ export async function scrapeStandings(
     divisions[division.name] = teams;
     console.log(`  ${division.name}: ${teams.length} teams`);
   });
+
+  const emptyDivisions = season.divisions
+    .filter((division) => divisions[division.name].length === 0)
+    .map((division) => division.name);
+  if (emptyDivisions.length > 0) {
+    throw new Error(
+      `No teams parsed for ${emptyDivisions.join(", ")}. ` +
+        "No standings snapshot will be saved.",
+    );
+  }
 
   const snapshot: DailySnapshot = {
     date: getTodayISO(),

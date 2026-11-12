@@ -1,0 +1,30 @@
+name: Validate scraper
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Enable corepack
+        run: corepack enable
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "yarn"
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Test scraper
+        run: yarn test
+      - name: Type check
+        run: yarn typecheck
+      - name: Build frontend
+        run: yarn build
