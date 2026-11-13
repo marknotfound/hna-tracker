@@ -1,15 +1,26 @@
 name: Daily Standings Scrape
 
 on:
-  # Run daily at 6:00 AM UTC (after most games finish)
+  # Run at 6:00 AM UTC (after most games finish), then again a few times later
+  # in the day. HNA's WAF intermittently challenges requests from GitHub's
+  # runners; the scraper skips snapshots that already exist for today, so the
+  # later runs are no-ops on good days and retry only what's missing otherwise.
   schedule:
     - cron: "0 6 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 18 * * *"
+    - cron: "0 23 * * *"
 
   # Allow manual trigger for testing
   workflow_dispatch:
 
 permissions:
   contents: write
+
+# Never let two scrapes race to push snapshot commits.
+concurrency:
+  group: scrape
+  cancel-in-progress: false
 
 jobs:
   scrape:
@@ -32,6 +43,10 @@ jobs:
         run: yarn install --immutable
 
       - name: Run scraper
+        id: scrape
+        # Keep going on failure so any datasets that did succeed still get
+        # committed; the job is marked failed at the end.
+        continue-on-error: true
         run: yarn scrape
 
       - name: Check for changes
@@ -52,4 +67,8 @@ jobs:
           git commit -m "📊 Update standings snapshot for $(date +%Y-%m-%d)"
           git push
 
-
+      - name: Fail if scraper failed
+        if: steps.scrape.outcome == 'failure'
+        run: |
+          echo "::error::Scraper failed for at least one dataset (see 'Run scraper' logs). A later scheduled run will retry."
+          exit 1

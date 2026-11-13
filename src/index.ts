@@ -267,9 +267,22 @@ async function main(): Promise<void> {
     return;
   }
 
-  try {
-    // Scrape standings if needed
-    if (forceRun || !standingsExist) {
+  // Each dataset is scraped independently so one being blocked doesn't throw
+  // away the others. Anything that fails is simply not saved, so the next
+  // scheduled run (which skips existing snapshots) retries just that part.
+  const failures: string[] = [];
+
+  async function runTask(name: string, task: () => Promise<void>) {
+    try {
+      await task();
+    } catch (error) {
+      failures.push(name);
+      console.error(`\nError scraping ${name}:`, error);
+    }
+  }
+
+  if (forceRun || !standingsExist) {
+    await runTask("standings", async () => {
       console.log("Scraping HNA standings...");
       const snapshot = await scrapeStandings(season);
 
@@ -280,8 +293,7 @@ async function main(): Promise<void> {
       );
 
       if (totalTeams === 0) {
-        console.error("Error: No teams found in standings data!");
-        process.exit(1);
+        throw new Error("No teams found in standings data");
       }
 
       console.log(
@@ -293,19 +305,18 @@ async function main(): Promise<void> {
         console.log(`  - ${division}: ${teams.length} teams`);
       }
 
-      // Save the snapshot
       console.log("\nSaving standings snapshot...");
       saveSnapshot(snapshot);
-    } else {
-      console.log(`Standings snapshot for ${today} already exists, skipping.`);
-    }
+    });
+  } else {
+    console.log(`Standings snapshot for ${today} already exists, skipping.`);
+  }
 
-    // Scrape player stats if needed
-    if (forceRun || !playerStatsExist) {
+  if (forceRun || !playerStatsExist) {
+    await runTask("player stats", async () => {
       console.log("\nScraping HNA player stats...");
       const playerStatsSnapshot = await scrapePlayerStats(season);
 
-      // Validate that we got data
       const totalPlayers = Object.values(playerStatsSnapshot.divisions).reduce(
         (sum, players) => sum + players.length,
         0,
@@ -326,21 +337,18 @@ async function main(): Promise<void> {
         }
       }
 
-      // Save the player stats snapshot
       console.log("\nSaving player stats snapshot...");
       savePlayerStatsSnapshot(playerStatsSnapshot);
-    } else {
-      console.log(
-        `Player stats snapshot for ${today} already exists, skipping.`,
-      );
-    }
+    });
+  } else {
+    console.log(`Player stats snapshot for ${today} already exists, skipping.`);
+  }
 
-    // Scrape goalie stats if needed
-    if (forceRun || !goalieStatsExist) {
+  if (forceRun || !goalieStatsExist) {
+    await runTask("goalie stats", async () => {
       console.log("\nScraping HNA goalie stats...");
       const goalieStatsSnapshot = await scrapeGoalieStats(season);
 
-      // Validate that we got data
       const totalGoalies = Object.values(goalieStatsSnapshot.divisions).reduce(
         (sum, goalies) => sum + goalies.length,
         0,
@@ -361,20 +369,19 @@ async function main(): Promise<void> {
         }
       }
 
-      // Save the goalie stats snapshot
       console.log("\nSaving goalie stats snapshot...");
       saveGoalieStatsSnapshot(goalieStatsSnapshot);
-    } else {
-      console.log(
-        `Goalie stats snapshot for ${today} already exists, skipping.`,
-      );
-    }
+    });
+  } else {
+    console.log(`Goalie stats snapshot for ${today} already exists, skipping.`);
+  }
 
-    console.log("\nDone!");
-  } catch (error) {
-    console.error("Error scraping data:", error);
+  if (failures.length > 0) {
+    console.error(`\nFailed to scrape: ${failures.join(", ")}`);
     process.exit(1);
   }
+
+  console.log("\nDone!");
 }
 
 // Run the main function

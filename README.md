@@ -44,7 +44,7 @@ hna-tracker/
 │           ├── player-stats/      # Daily player stats snapshots
 │           └── goalie-stats/      # Daily goalie stats snapshots
 ├── .github/workflows/
-│   ├── scrape.yml        # Daily scraping (6 AM UTC)
+│   ├── scrape.yml        # Daily scraping (6 AM UTC, retried 12/18/23 UTC)
 │   └── deploy.yml        # Deploy to GitHub Pages
 └── dist/                 # Built frontend (auto-generated)
 ```
