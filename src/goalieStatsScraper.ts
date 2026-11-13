@@ -118,13 +118,9 @@ export async function scrapeGoalieStats(
 
   // Scrape each division's stats
   for (const division of season.divisions) {
-    try {
-      const stats = await scrapeDivisionGoalieStats(season, division);
-      divisions[division.name] = stats;
-    } catch (error) {
-      console.error(`  Error scraping ${division.name} goalie stats:`, error);
-      divisions[division.name] = [];
-    }
+    // Let fetch errors propagate: saving an empty division would write a
+    // snapshot that stops the next run from retrying today's data.
+    divisions[division.name] = await scrapeDivisionGoalieStats(season, division);
   }
 
   const snapshot: GoalieStatsSnapshot = {

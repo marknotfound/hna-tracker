@@ -137,15 +137,66 @@ export function buildGoalieStatsUrl(
   return `${HNA_BASE_URL}/stats_hockey.cfm?clientid=${CLIENT_ID}&leagueID=${season.leagueId}&divID=${divId}&statType=goalie&printPage=0`;
 }
 
-/** Fetch a page with the headers HNA expects, throwing on non-2xx. */
-export async function fetchHnaPage(url: string): Promise<string> {
+/**
+ * Thrown when HNA's AWS WAF answers with a bot challenge instead of the page.
+ *
+ * The WAF signals this with `x-amzn-waf-action: challenge` and an HTTP 202 with
+ * an empty body. Because 202 is a 2xx, `response.ok` is true, so without this
+ * check the scraper would happily parse an empty document and find no data.
+ */
+export class HnaBlockedError extends Error {
+  constructor(url: string, detail: string) {
+    super(`HNA blocked the request for ${url} (${detail})`);
+    this.name = "HnaBlockedError";
+  }
+}
+
+/** Delays between fetch attempts (ms). Kept modest so we stay a polite client. */
+const RETRY_DELAYS_MS = [15_000, 45_000, 90_000];
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function fetchHnaPageOnce(url: string): Promise<string> {
   const response = await fetch(url, {
     headers: { "User-Agent": HNA_USER_AGENT },
   });
-  if (!response.ok) {
+
+  const wafAction = response.headers.get("x-amzn-waf-action");
+  if (wafAction) {
+    throw new HnaBlockedError(
+      url,
+      `WAF action "${wafAction}", HTTP ${response.status}`,
+    );
+  }
+  if (response.status !== 200) {
     throw new Error(
       `Failed to fetch ${url}: ${response.status} ${response.statusText}`,
     );
   }
-  return response.text();
+
+  const body = await response.text();
+  if (body.trim().length === 0) {
+    throw new HnaBlockedError(url, "empty response body");
+  }
+  return body;
+}
+
+/**
+ * Fetch a page with the headers HNA expects. Only a 200 with a non-empty body
+ * counts as success; anything else is retried a few times and then thrown.
+ */
+export async function fetchHnaPage(url: string): Promise<string> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetchHnaPageOnce(url);
+    } catch (error) {
+      if (attempt >= RETRY_DELAYS_MS.length) throw error;
+      const delay = RETRY_DELAYS_MS[attempt];
+      console.warn(
+        `  ${(error as Error).message}; retrying in ${delay / 1000}s ` +
+          `(attempt ${attempt + 2}/${RETRY_DELAYS_MS.length + 1})`,
+      );
+      await sleep(delay);
+    }
+  }
 }
